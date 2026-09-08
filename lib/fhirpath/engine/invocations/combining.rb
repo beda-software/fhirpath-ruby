@@ -1,13 +1,19 @@
 # frozen_string_literal: true
 
+require_relative "existence"
+
 module Fhirpath
   module Engine
     module Invocations
-      # Ruby port of `combine` from fhirpath-py's fhirpathpy/engine/invocations/combining.py.
+      # Ruby port of `combine`/`union_op` from fhirpath-py's
+      # fhirpathpy/engine/invocations/combining.py.
       module Combining
-        def self.combine(ctx, data, other_node)
-          base = ctx[:this] || ctx[:root]
-          data + Engine.do_eval(ctx, base, other_node)
+        def self.combine(_ctx, coll1, coll2)
+          coll1 + coll2
+        end
+
+        def self.union(ctx, coll1, coll2)
+          Existence.distinct(ctx, coll1 + coll2)
         end
       end
     end

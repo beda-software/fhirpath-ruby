@@ -23,6 +23,11 @@ module Fhirpath
           op = node["terminalNodeText"].first
           Engine.infix_invoke(ctx, op, parent_data, node["children"])
         end
+
+        # Unlike op_expression, "|" is fixed rather than read off the node.
+        def union_expression(ctx, parent_data, node)
+          Engine.infix_invoke(ctx, "|", parent_data, node["children"])
+        end
       end
     end
   end

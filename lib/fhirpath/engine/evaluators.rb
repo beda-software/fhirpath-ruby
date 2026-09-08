@@ -1,44 +1,36 @@
 # frozen_string_literal: true
 
-require "bigdecimal"
-
 require_relative "evaluators/expressions"
 require_relative "evaluators/member_invocation"
+require_relative "evaluators/literals"
 
 module Fhirpath
   module Engine
     # Ruby port of fhirpath-py's fhirpathpy/engine/evaluators/__init__.py: dispatch table from
     # AST node "type" to the function that evaluates it, plus the term/identifier/invocation
-    # evaluators. Unary/binary *Expression evaluators live in evaluators/expressions.rb; this
-    # file is reopened by both.
+    # evaluators. Unary/binary *Expression evaluators live in evaluators/expressions.rb, literal
+    # evaluators live in evaluators/literals.rb; this file is reopened by both.
     module Evaluators
       class << self
         def identifier(_ctx, _parent_data, node)
           [node["text"].sub(/\A"/, "").sub(/"\z/, "")]
         end
 
-        def number_literal(_ctx, _parent_data, node)
-          value = BigDecimal(node["text"])
-          int_value = value.to_i
-          [value == int_value ? int_value : value]
+        def this_invocation(ctx, _parent_data, _node)
+          Util.arraify(ctx[:this])
         end
 
-        def string_literal(_ctx, _parent_data, node)
-          text = node["text"].sub(/\A['"]/, "").sub(/['"]\z/, "")
-          text = text.gsub("\\'", "'")
-                     .gsub("\\`", "`")
-                     .gsub('\\"', '"')
-                     .gsub("\\r", "\r")
-                     .gsub("\\n", "\n")
-                     .gsub("\\t", "\t")
-                     .gsub("\\f", "\f")
-                     .gsub("\\\\", "\\")
-          [text.gsub(/\\u(\h{4})/) { [::Regexp.last_match(1).to_i(16)].pack("U") }]
+        def index_invocation(ctx, _parent_data, _node)
+          Util.arraify(ctx[:index])
         end
 
         def literal_term(ctx, parent_data, node)
           term = node["children"]&.first
           term ? Engine.do_eval(ctx, parent_data, term) : [node["text"]]
+        end
+
+        def parenthesized_term(ctx, parent_data, node)
+          Engine.do_eval(ctx, parent_data, node["children"][0])
         end
 
         def invocation_term(ctx, parent_data, node)
@@ -87,16 +79,25 @@ module Fhirpath
         "ParamList" => method(:param_list),
         "Identifier" => method(:identifier),
         "LiteralTerm" => method(:literal_term),
+        "NullLiteral" => method(:null_literal),
         "NumberLiteral" => method(:number_literal),
         "StringLiteral" => method(:string_literal),
+        "BooleanLiteral" => method(:boolean_literal),
+        "QuantityLiteral" => method(:quantity_literal),
+        "DateTimeLiteral" => method(:date_time_literal),
         "InvocationTerm" => method(:invocation_term),
+        "ParenthesizedTerm" => method(:parenthesized_term),
+        "ThisInvocation" => method(:this_invocation),
+        "IndexInvocation" => method(:index_invocation),
         "MemberInvocation" => method(:member_invocation),
         "FunctionInvocation" => method(:function_invocation),
         "PolarityExpression" => method(:polarity_expression),
         "IndexerExpression" => method(:indexer_expression),
         "TermExpression" => method(:term_expression),
         "InvocationExpression" => method(:invocation_expression),
-        "EqualityExpression" => method(:op_expression)
+        "UnionExpression" => method(:union_expression),
+        "EqualityExpression" => method(:op_expression),
+        "InequalityExpression" => method(:op_expression)
       }.freeze
     end
   end

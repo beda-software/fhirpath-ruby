@@ -38,6 +38,43 @@ module Fhirpath
             value.is_a?(::Array) ? acc.concat(value) : acc << value
           end
         end
+
+        def true?(value)
+          value == true || (value.is_a?(::Array) && value.length == 1 && value.first == true)
+        end
+
+        # Dedupes values that compare equal after normalizing hash key order (so
+        # `{"a"=>1,"b"=>2}` and `{"b"=>2,"a"=>1}` collapse together), preserving first-seen
+        # order — mirrors fhirpath-py's util.uniq (JSON-with-sorted-keys as the dedup key).
+        def uniq(values)
+          seen = {}
+          values.each_with_object([]) do |value, acc|
+            key = canonical_key(value)
+            next if seen[key]
+
+            seen[key] = true
+            acc << value
+          end
+        end
+
+        private
+
+        def canonical_key(value)
+          sorted_keys(value).to_s
+        rescue ::StandardError
+          value.to_s
+        end
+
+        def sorted_keys(value)
+          case value
+          when ::Hash
+            value.keys.sort_by(&:to_s).each_with_object({}) { |k, h| h[k] = sorted_keys(value[k]) }
+          when ::Array
+            value.map { |v| sorted_keys(v) }
+          else
+            value
+          end
+        end
       end
     end
   end

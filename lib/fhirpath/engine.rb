@@ -39,11 +39,8 @@ module Fhirpath
 
       def make_param(ctx, parent_data, node_type, param)
         return build_expr_param(ctx, param) if node_type == "Expr"
-
-        if node_type == "Any"
-          ctx[:this] = parent_data
-          return do_eval(ctx, parent_data, param)
-        end
+        return eval_param(ctx, parent_data, param) if node_type == "Any"
+        return eval_param(ctx, ctx[:this] || ctx[:root], param) if node_type == "AnyAtRoot"
 
         raise Fhirpath::Error, "Implement me for #{node_type}"
       end
@@ -93,6 +90,11 @@ module Fhirpath
           ctx[:this] = Util.arraify(data)
           do_eval(ctx, ctx[:this], param)
         end
+      end
+
+      def eval_param(ctx, data, param)
+        ctx[:this] = data
+        do_eval(ctx, data, param)
       end
 
       def invocation_registry(ctx)
