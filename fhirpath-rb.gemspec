@@ -31,8 +31,10 @@ Gem::Specification.new do |spec|
   spec.bindir = "exe"
   spec.executables = spec.files.grep(%r{\Aexe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
+  spec.extensions = ["ext/fhir_path_parser/extconf.rb"]
 
   spec.add_dependency "fhir_models", "~> 5.1"
+  spec.add_dependency "rice", "~> 4.0"
 
   # For more information and examples about making a new gem, check out our
   # guide at: https://bundler.io/guides/creating_gem.html

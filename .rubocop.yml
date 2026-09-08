@@ -6,3 +6,20 @@ Style/StringLiterals:
 
 Style/StringLiteralsInInterpolation:
   EnforcedStyle: double_quotes
+
+# extconf.rb's $CFLAGS/$srcs/etc are mkmf's own API, not avoidable globals.
+Style/GlobalVars:
+  Exclude:
+    - "ext/**/extconf.rb"
+
+Style/FrozenStringLiteralComment:
+  Exclude:
+    - "ext/**/extconf.rb"
+
+# Both files are inherently long: one assembles generated C++ source via heredocs, the other
+# lists fhirpath-py's ported test expressions.
+Metrics/BlockLength:
+  Exclude:
+    - "rakelib/**/*.rake"
+    - "spec/**/*_spec.rb"
+    - "*.gemspec"

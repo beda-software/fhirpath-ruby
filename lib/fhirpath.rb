@@ -3,7 +3,10 @@
 require "fhir_models"
 
 require_relative "fhirpath/version"
+require_relative "fhirpath/parser"
 
+# Ruby implementation of FHIRPath (https://hl7.org/fhirpath/), a port of fhirpath-py
+# (https://github.com/beda-software/fhirpath-py).
 module Fhirpath
   class Error < StandardError; end
 

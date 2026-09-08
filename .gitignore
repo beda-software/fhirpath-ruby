@@ -11,3 +11,15 @@
 
 # Gems should not commit their lockfile — the gemspec's constraints are the source of truth.
 /Gemfile.lock
+
+# Generated/vendored ANTLR4 parser sources and native extension build artifacts —
+# produced by `rake parser:setup compile`, not committed. See lib/fhirpath/parser/FHIRPath.g4.
+/ext/fhir_path_parser/antlr4-upstream/
+/ext/fhir_path_parser/antlrgen/
+/ext/fhir_path_parser/fhir_path_parser.cpp
+/ext/fhir_path_parser/Makefile
+/ext/fhir_path_parser/mkmf.log
+/ext/fhir_path_parser/*.o
+/ext/fhir_path_parser/*.bundle
+/ext/fhir_path_parser/*.so
+/ext/tmp/

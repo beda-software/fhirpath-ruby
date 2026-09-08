@@ -1,0 +1,33 @@
+{
+  "children": [{
+    "type": "InvocationExpression",
+    "text": "Observation.value",
+    "terminalNodeText": ["."],
+    "children": [{
+      "type": "TermExpression",
+      "text": "Observation",
+      "terminalNodeText": [],
+      "children": [{
+        "type": "InvocationTerm",
+        "terminalNodeText": [],
+        "children": [{
+          "type": "MemberInvocation",
+          "terminalNodeText": [],
+          "children": [{
+            "type": "Identifier",
+            "text": "Observation",
+            "terminalNodeText": ["Observation"]
+          }]
+        }]
+      }]
+    }, {
+      "type": "MemberInvocation",
+      "terminalNodeText": [],
+      "children": [{
+        "type": "Identifier",
+        "text": "value",
+        "terminalNodeText": ["value"]
+      }]
+    }]
+  }]
+}

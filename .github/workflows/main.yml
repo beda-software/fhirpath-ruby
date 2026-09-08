@@ -23,5 +23,9 @@ jobs:
         with:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true
+      - name: Install JRE (needed to generate the ANTLR4 parser)
+        run: sudo apt-get update && sudo apt-get install -y default-jre
+      - name: Build the native FHIRPath parser extension
+        run: bundle exec rake parser:setup compile
       - name: Run the default task
         run: bundle exec rake
