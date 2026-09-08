@@ -46,6 +46,7 @@ module Fhirpath
         "combine" => { fn: Combining.method(:combine), arity: { 1 => ["AnyAtRoot"] } },
         "coalesce" => { fn: Combining.method(:coalesce), variadic: "Expr" },
         "|" => { fn: Combining.method(:union), arity: { 2 => %w[Any Any] } },
+        "union" => { fn: Combining.method(:union), arity: { 1 => ["AnyAtRoot"] } },
         "intersect" => { fn: Subsetting.method(:intersect), arity: { 1 => ["AnyAtRoot"] } },
         "empty" => { fn: Existence.method(:empty) },
         "not" => { fn: Existence.method(:not) },

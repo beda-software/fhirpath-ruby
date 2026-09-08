@@ -58,8 +58,14 @@ module Fhirpath
             items.any? { |item| !boolean_value(item) }
           end
 
+          # `coll2.include?(item)` would be asymmetric here: Ruby's String#== (unlike Python's
+          # equality protocol, which falls back to the other side's __eq__) just returns false
+          # when compared against a non-String, so a raw-string coll2 checked against a
+          # ResourceNode-wrapped item would wrongly report "not found" even when the underlying
+          # data matches. Comparing unwrapped data on both sides avoids that.
           def subset_of(_ctx, coll1, coll2)
-            coll1.all? { |item| coll2.include?(item) }
+            coll2_data = coll2.map { |item| Util.get_data(item) }
+            coll1.all? { |item| coll2_data.include?(Util.get_data(item)) }
           end
 
           def superset_of(ctx, coll1, coll2)

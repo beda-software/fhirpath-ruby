@@ -12,8 +12,20 @@ require_relative "fhirpath/models"
 module Fhirpath
   class Error < StandardError; end
 
+  # `path` may be a plain FHIRPath expression string, or (mirroring fhirpath-py's evaluate) a
+  # {"expression" => ..., "base" => ...} Hash: "base" tags the resource with the FHIRPath it
+  # would have been reached at (e.g. "QuestionnaireResponse.item") without actually navigating
+  # there, so model-based navigation (e.g. choice-type resolution) below that point works when
+  # evaluating just a fragment of a resource.
   def self.evaluate(resource, path, context = {}, model = nil, options = {})
-    apply_parsed_path(resource, Parser.parse(path), context, model, options)
+    if path.is_a?(::Hash)
+      node = Parser.parse(path["expression"])
+      resource = Engine::Nodes::ResourceNode.create_node(resource, path["base"]) if path["base"]
+    else
+      node = Parser.parse(path)
+    end
+
+    apply_parsed_path(resource, node, context, model, options)
   end
 
   def self.compile(path, model = nil, options = {})
