@@ -13,6 +13,7 @@ require_relative "invocations/datetime"
 require_relative "invocations/types"
 require_relative "invocations/collections"
 require_relative "invocations/logic"
+require_relative "invocations/aggregate"
 require_relative "invocations/registry_strings_and_math"
 
 module Fhirpath
@@ -89,6 +90,11 @@ module Fhirpath
         "toDateTime" => { fn: Misc.method(:to_date_time) },
         "toTime" => { fn: Misc.method(:to_time) },
         "toQuantity" => { fn: Misc.method(:to_quantity), arity: { 0 => [], 1 => ["String"] } },
+        "aggregate" => { fn: Aggregate.method(:aggregate), arity: { 1 => ["Expr"], 2 => %w[Expr Any] } },
+        "sum" => { fn: Aggregate.method(:sum) },
+        "avg" => { fn: Aggregate.method(:avg) },
+        "min" => { fn: Aggregate.method(:min) },
+        "max" => { fn: Aggregate.method(:max) },
         "now" => { fn: Datetime.method(:now) },
         "today" => { fn: Datetime.method(:today) },
         "timeOfDay" => { fn: Datetime.method(:time_of_day) }

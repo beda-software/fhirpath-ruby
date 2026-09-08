@@ -24,6 +24,10 @@ module Fhirpath
           Util.arraify(ctx[:index])
         end
 
+        def total_invocation(ctx, _parent_data, _node)
+          Util.arraify(ctx[:total])
+        end
+
         def literal_term(ctx, parent_data, node)
           term = node["children"]&.first
           term ? Engine.do_eval(ctx, parent_data, term) : [node["text"]]
@@ -90,6 +94,7 @@ module Fhirpath
         "ParenthesizedTerm" => method(:parenthesized_term),
         "ThisInvocation" => method(:this_invocation),
         "IndexInvocation" => method(:index_invocation),
+        "TotalInvocation" => method(:total_invocation),
         "MemberInvocation" => method(:member_invocation),
         "FunctionInvocation" => method(:function_invocation),
         "PolarityExpression" => method(:polarity_expression),
