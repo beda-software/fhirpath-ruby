@@ -6,6 +6,7 @@ require_relative "invocations/equality"
 require_relative "invocations/existence"
 require_relative "invocations/combining"
 require_relative "invocations/math"
+require_relative "invocations/subsetting"
 
 module Fhirpath
   module Engine
@@ -18,12 +19,18 @@ module Fhirpath
         "select" => { fn: Filtering.method(:select), arity: { 1 => ["Expr"] } },
         "repeat" => { fn: Filtering.method(:repeat), arity: { 1 => ["Expr"] } },
         "ofType" => { fn: Filtering.method(:of_type), arity: { 1 => ["TypeSpecifier"] } },
+        "single" => { fn: Filtering.method(:single) },
         "first" => { fn: Filtering.method(:first) },
+        "last" => { fn: Filtering.method(:last) },
+        "tail" => { fn: Filtering.method(:tail) },
+        "take" => { fn: Filtering.method(:take), arity: { 1 => ["Integer"] } },
+        "skip" => { fn: Filtering.method(:skip), arity: { 1 => ["Integer"] } },
         "children" => { fn: Navigation.method(:children) },
         "descendants" => { fn: Navigation.method(:descendants) },
         "combine" => { fn: Combining.method(:combine), arity: { 1 => ["AnyAtRoot"] } },
         "coalesce" => { fn: Combining.method(:coalesce), variadic: "Expr" },
         "|" => { fn: Combining.method(:union), arity: { 2 => %w[Any Any] } },
+        "intersect" => { fn: Subsetting.method(:intersect), arity: { 1 => ["AnyAtRoot"] } },
         "empty" => { fn: Existence.method(:empty) },
         "not" => { fn: Existence.method(:not) },
         "exists" => { fn: Existence.method(:exists), arity: { 0 => [], 1 => ["Expr"] } },

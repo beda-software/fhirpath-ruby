@@ -3,12 +3,35 @@
 module Fhirpath
   module Engine
     module Invocations
-      # Ruby port of `where`/`select`/`repeat`/`ofType`/`first` from fhirpath-py's
-      # fhirpathpy/engine/invocations/filtering.py.
+      # Ruby port of `where`/`select`/`repeat`/`ofType`/`single`/`first`/`last`/`tail`/`take`/
+      # `skip` from fhirpath-py's fhirpathpy/engine/invocations/filtering.py.
       module Filtering
         class << self
+          def single(_ctx, coll)
+            return coll if coll.length == 1
+            return [] if coll.empty?
+
+            { "$status" => "error", "$error" => "Expected single" }
+          end
+
           def first(_ctx, coll)
             coll.empty? ? [] : coll.first
+          end
+
+          def last(_ctx, coll)
+            coll.empty? ? [] : coll.last
+          end
+
+          def tail(_ctx, coll)
+            coll.empty? ? [] : coll[1..]
+          end
+
+          def take(_ctx, coll, num)
+            coll.empty? ? [] : coll.first([num.to_i, 0].max)
+          end
+
+          def skip(_ctx, coll, num)
+            coll.empty? ? [] : coll.drop([num.to_i, 0].max)
           end
 
           def where(ctx, data, expr)
