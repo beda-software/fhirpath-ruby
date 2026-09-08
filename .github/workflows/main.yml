@@ -9,22 +9,33 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-    name: Ruby ${{ matrix.ruby }}
+    runs-on: ${{ matrix.os }}
+    name: Ruby ${{ matrix.ruby }} (${{ matrix.os }})
+    continue-on-error: ${{ matrix.ruby == 'head' }}
     strategy:
+      fail-fast: false
       matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+          - macos-latest
         ruby:
-          - '3.3.6'
+          - '3.3'
+          - '3.4'
+          - '4.0'
 
     steps:
       - uses: actions/checkout@v4
+      - name: Set up Java (needed to generate the ANTLR4 parser)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true
-      - name: Install JRE (needed to generate the ANTLR4 parser)
-        run: sudo apt-get update && sudo apt-get install -y default-jre
       - name: Build the native FHIRPath parser extension
         run: bundle exec rake parser:setup compile
       - name: Run the default task
