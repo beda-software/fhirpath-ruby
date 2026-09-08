@@ -8,7 +8,7 @@ module Fhirpath
 
   def self.compile: [SRC < FHIR::Model, DST] (untyped path, ?Module? model, ?untyped options) -> ^(SRC resource, ?untyped context) -> Array[DST]
 
-  def self.compile_as_array: [SRC < FHIR::Model, DST] (String expression, ?Module? model) -> ^(SRC resource, ?untyped context) -> Array[DST]
+  def self.compile_as_array: [SRC < FHIR::Model, DST] (String expression, Class input_type, Class output_type, ?Module? model) -> ^(SRC resource, ?untyped context) -> Array[DST]
 
-  def self.compile_as_first: [SRC < FHIR::Model, DST] (String expression, ?Module? model) -> ^(SRC resource, ?untyped context) -> DST?
+  def self.compile_as_first: [SRC < FHIR::Model, DST] (String expression, Class input_type, Class output_type, ?Module? model) -> ^(SRC resource, ?untyped context) -> DST?
 end

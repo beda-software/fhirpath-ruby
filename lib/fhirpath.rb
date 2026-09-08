@@ -33,14 +33,50 @@ module Fhirpath
     ->(resource, context = nil) { apply_parsed_path(resource, node, context || {}, model, options) }
   end
 
-  def self.compile_as_array(expression, model = nil)
-    compile(expression, model)
+  # Ruby port of fhirpath-py's compile_as_array (fhirpathpy/__init__.py): like `compile`, but
+  # the returned callable accepts a fhir_models `input_type` instance instead of a plain Hash,
+  # and wraps each result item as an `output_type` instance instead of returning raw data.
+  def self.compile_as_array(expression, input_type, output_type, model = nil)
+    path_fn = compile(expression, model)
+    lambda do |resource, context = nil|
+      data = path_fn.call(prepare_data(resource, input_type), context)
+      format_result(data, output_type, array: true)
+    end
   end
 
-  def self.compile_as_first(expression, model = nil)
-    path = compile_as_array(expression, model)
-    ->(resource, context = nil) { path.call(resource, context).first }
+  def self.compile_as_first(expression, input_type, output_type, model = nil)
+    path_fn = compile(expression, model)
+    lambda do |resource, context = nil|
+      data = path_fn.call(prepare_data(resource, input_type), context)
+      format_result(data, output_type, array: false)
+    end
   end
+
+  def self.prepare_data(resource, input_type)
+    raise Error, "Resource type is #{resource.class}, expected #{input_type}" unless resource.is_a?(input_type)
+
+    return resource if resource.is_a?(::Hash)
+    return resource.to_hash if resource.respond_to?(:to_hash)
+
+    raise Error, "Don't know how to work with type #{resource.class}"
+  end
+  private_class_method :prepare_data
+
+  def self.format_result(result, output_type, array:)
+    formatted = result.map { |item| format_item(item, output_type) }
+    return formatted if array
+
+    formatted.first
+  end
+  private_class_method :format_result
+
+  def self.format_item(item, output_type)
+    return item if item.is_a?(output_type)
+    return output_type.new(item) if item.is_a?(::Hash) && output_type.is_a?(::Class) && output_type <= ::FHIR::Model
+
+    raise Error, "Expected result to be #{output_type}, but got #{item.class}"
+  end
+  private_class_method :format_item
 
   # Ruby port of fhirpath-py's apply_parsed_path (fhirpathpy/__init__.py): builds the
   # evaluation context and resolves the AST, then unwraps internal ResourceNode wrappers back
