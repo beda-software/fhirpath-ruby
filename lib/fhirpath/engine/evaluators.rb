@@ -105,7 +105,8 @@ module Fhirpath
         "ImpliesExpression" => method(:op_expression),
         "AndExpression" => method(:op_expression),
         "XorExpression" => method(:op_expression),
-        "AdditiveExpression" => method(:op_expression)
+        "AdditiveExpression" => method(:op_expression),
+        "MultiplicativeExpression" => method(:op_expression)
       }.freeze
     end
   end

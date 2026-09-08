@@ -24,6 +24,20 @@ module Fhirpath
           "'h'" => "'h'", "'min'" => "'min'", "'s'" => "'s'", "'ms'" => "'ms'"
         }.freeze
 
+        # Which quantity units are valid for date/time arithmetic (FPDateTime#plus/FPTime#plus),
+        # and which canonical duration unit each one means. Mirrors fhirpath-py's
+        # FP_Quantity._arithmetic_duration_units — deliberately narrower than TIME_UNITS_TO_UCUM
+        # above: the quoted UCUM year/month codes ("'a'"/"'mo'") are NOT valid here (only the
+        # bare words "year"/"month" are), per https://hl7.org/fhirpath/#datetime-arithmetic.
+        ARITHMETIC_DURATION_UNITS = {
+          "years" => :year, "months" => :month, "weeks" => :week, "days" => :day,
+          "hours" => :hour, "minutes" => :minute, "seconds" => :second, "milliseconds" => :millisecond,
+          "year" => :year, "month" => :month, "week" => :week, "day" => :day,
+          "hour" => :hour, "minute" => :minute, "second" => :second, "millisecond" => :millisecond,
+          "'wk'" => :week, "'d'" => :day, "'h'" => :hour,
+          "'min'" => :minute, "'s'" => :second, "'ms'" => :millisecond
+        }.freeze
+
         YEAR_MONTH_FACTORS = {
           "years" => BigDecimal("12"), "year" => BigDecimal("12"), "'a'" => BigDecimal("12"),
           "months" => BigDecimal("1"), "month" => BigDecimal("1"), "'mo'" => BigDecimal("1")

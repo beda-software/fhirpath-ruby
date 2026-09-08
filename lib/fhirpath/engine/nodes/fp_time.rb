@@ -10,7 +10,8 @@ module Fhirpath
       # (https://hl7.org/fhirpath/#equals). Mirrors FPDateTime's approach (see there for the
       # precision-comparison rationale); the leading "T" is optional since both a `@Thh:mm...`
       # literal (stripped of "@T" before construction) and a raw "Thh:mm..." string (as stored
-      # in a resource) must parse the same.
+      # in a resource) must parse the same. `#plus` (time + duration quantity arithmetic) lives
+      # in fp_time_arithmetic.rb, which reopens this class.
       class FPTime
         FORMAT = /
           \AT?(?<hour>\d{2})

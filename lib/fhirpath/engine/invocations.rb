@@ -13,14 +13,18 @@ require_relative "invocations/datetime"
 require_relative "invocations/types"
 require_relative "invocations/collections"
 require_relative "invocations/logic"
+require_relative "invocations/registry_strings_and_math"
 
 module Fhirpath
   module Engine
     module Invocations
       # Ruby port of the base `invocation_registry` built in fhirpath-py's
       # fhirpathpy/engine/invocations/__init__.py. Only entries needed so far are ported; see
-      # the category modules required above.
-      REGISTRY = {
+      # the category modules required above. Split across two constants purely to keep this
+      # module's line count down — REGISTRY_STRINGS_AND_MATH (the string functions and the
+      # single-argument math functions) lives in registry_strings_and_math.rb, which reopens
+      # this module.
+      REGISTRY_CORE = {
         "where" => { fn: Filtering.method(:where), arity: { 1 => ["Expr"] } },
         "select" => { fn: Filtering.method(:select), arity: { 1 => ["Expr"] } },
         "repeat" => { fn: Filtering.method(:repeat), arity: { 1 => ["Expr"] } },
@@ -70,6 +74,12 @@ module Fhirpath
         "xor" => { fn: Logic.method(:xor_op), arity: { 2 => %w[Boolean Boolean] } },
         "implies" => { fn: Logic.method(:implies_op), arity: { 2 => %w[Boolean Boolean] } },
         "+" => { fn: Math.method(:plus), arity: { 2 => %w[Any Any] }, nullable: true },
+        "-" => { fn: Math.method(:minus), arity: { 2 => %w[Any Any] }, nullable: true },
+        "*" => { fn: Math.method(:mul), arity: { 2 => %w[Number Number] }, nullable: true },
+        "/" => { fn: Math.method(:div), arity: { 2 => %w[Number Number] }, nullable: true },
+        "div" => { fn: Math.method(:intdiv), arity: { 2 => %w[Number Number] }, nullable: true },
+        "mod" => { fn: Math.method(:mod), arity: { 2 => %w[Number Number] }, nullable: true },
+        "&" => { fn: Math.method(:amp), arity: { 2 => %w[String String] } },
         "iif" => { fn: Misc.method(:iif), arity: { 2 => %w[Expr Expr], 3 => %w[Expr Expr Expr] } },
         "trace" => { fn: Misc.method(:trace), arity: { 0 => [], 1 => ["String"] } },
         "toInteger" => { fn: Misc.method(:to_integer) },
@@ -79,45 +89,12 @@ module Fhirpath
         "toDateTime" => { fn: Misc.method(:to_date_time) },
         "toTime" => { fn: Misc.method(:to_time) },
         "toQuantity" => { fn: Misc.method(:to_quantity), arity: { 0 => [], 1 => ["String"] } },
-        "indexOf" => { fn: Strings.method(:index_of), arity: { 1 => ["String"] }, nullable_input: true },
-        "substring" => {
-          fn: Strings.method(:substring),
-          arity: { 1 => ["Integer"], 2 => %w[Integer Integer] },
-          nullable_input: true
-        },
-        "startsWith" => { fn: Strings.method(:starts_with), arity: { 1 => ["String"] }, nullable_input: true },
-        "endsWith" => { fn: Strings.method(:ends_with), arity: { 1 => ["String"] }, nullable_input: true },
-        "contains" => { fn: Strings.method(:contains), arity: { 1 => ["String"] }, nullable_input: true },
-        "upper" => { fn: Strings.method(:upper), nullable_input: true },
-        "lower" => { fn: Strings.method(:lower), nullable_input: true },
-        "replace" => { fn: Strings.method(:replace), arity: { 2 => %w[String String] }, nullable_input: true },
-        "matches" => { fn: Strings.method(:matches), arity: { 1 => ["String"] }, nullable_input: true },
-        "replaceMatches" => {
-          fn: Strings.method(:replace_matches),
-          arity: { 2 => %w[String String] },
-          nullable_input: true
-        },
-        "length" => { fn: Strings.method(:length), nullable_input: true },
-        "toChars" => { fn: Strings.method(:to_chars) },
-        "join" => { fn: Strings.method(:join), arity: { 0 => [], 1 => ["String"] } },
-        "split" => { fn: Strings.method(:split), arity: { 1 => ["String"] }, nullable_input: true },
-        "trim" => { fn: Strings.method(:trim), nullable_input: true },
-        "encode" => { fn: Strings.method(:encode), arity: { 1 => ["String"] } },
-        "decode" => { fn: Strings.method(:decode), arity: { 1 => ["String"] } },
-        "abs" => { fn: Math.method(:abs) },
-        "ceiling" => { fn: Math.method(:ceiling) },
-        "exp" => { fn: Math.method(:exp) },
-        "floor" => { fn: Math.method(:floor) },
-        "ln" => { fn: Math.method(:ln) },
-        "log" => { fn: Math.method(:log), arity: { 1 => ["Number"] }, nullable: true },
-        "power" => { fn: Math.method(:power), arity: { 1 => ["Number"] }, nullable: true },
-        "round" => { fn: Math.method(:round), arity: { 1 => ["Number"] } },
-        "sqrt" => { fn: Math.method(:sqrt) },
-        "truncate" => { fn: Math.method(:truncate) },
         "now" => { fn: Datetime.method(:now) },
         "today" => { fn: Datetime.method(:today) },
         "timeOfDay" => { fn: Datetime.method(:time_of_day) }
       }.freeze
+
+      REGISTRY = REGISTRY_CORE.merge(REGISTRY_STRINGS_AND_MATH).freeze
     end
   end
 end

@@ -49,7 +49,14 @@ module DataFileTestSupport
     return true if actual == expected
     return false unless singleton_arrays?(actual, expected)
 
-    normalized_expected = normalize_expected(expected[0])
+    expected_value = expected[0]
+    return true if actual[0] == expected_value || actual[0].to_s == expected_value.to_s
+
+    # Only String-typed expected values fall back to re-evaluating as a FHIRPath expression
+    # (e.g. a boolean/type-name comparison written as expression text); this must stay a
+    # fallback tried only after the raw comparison above fails — re-evaluating a value like a
+    # bare "2017-02-28" as an expression would (mis)parse it as subtraction, not a date.
+    normalized_expected = normalize_expected(expected_value)
     actual[0] == normalized_expected || actual[0].to_s == normalized_expected.to_s
   end
 

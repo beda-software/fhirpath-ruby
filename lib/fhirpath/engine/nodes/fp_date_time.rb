@@ -10,6 +10,8 @@ module Fhirpath
       # (https://hl7.org/fhirpath/#equals): each specified precision level is compared in turn,
       # starting from year; a mismatch there is `false`, but if one side simply doesn't specify
       # a precision level the other does, the result is empty (`nil` here) rather than `false`.
+      # `#plus` (date/time + duration quantity arithmetic) lives in fp_date_time_arithmetic.rb,
+      # which reopens this class.
       class FPDateTime
         FORMAT = /
           \A(?<year>\d{4})

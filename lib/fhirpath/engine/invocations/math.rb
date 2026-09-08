@@ -1,128 +1,114 @@
 # frozen_string_literal: true
 
 require "bigdecimal"
-require "bigdecimal/math"
+require_relative "math_functions"
 
 module Fhirpath
   module Engine
     module Invocations
-      # Ruby port of `+`/`abs`/`ceiling`/`exp`/`floor`/`ln`/`log`/`power`/`round`/`sqrt`/
-      # `truncate` from fhirpath-py's fhirpathpy/engine/invocations/math.py. `-`/`*`/`/`/`div`/
-      # `mod`/`&` and FP_TimeBase/FP_Quantity arithmetic aren't exercised yet.
+      # Ruby port of `+`/`-`/`*`/`/`/`div`/`mod`/`&` from fhirpath-py's
+      # fhirpathpy/engine/invocations/math.py, including FP_TimeBase/FP_Quantity date
+      # arithmetic (`+`/`-` between a date/time and a duration quantity). The single-argument
+      # numeric functions (`abs`/`ceiling`/`exp`/`floor`/`ln`/`log`/`power`/`round`/`sqrt`/
+      # `truncate`) live in math_functions.rb, reopening this same module.
       module Math
-        LOG_PRECISION = 30
-        LOG_SCALE = 15
-
         class << self
           def plus(_ctx, left, right)
-            raise Fhirpath::Error, "Cannot #{left} + #{right}" if left.length != 1 || right.length != 1
+            lhs, rhs = resolve_operands(left, right, "+")
 
-            x = Util.get_data(left[0])
-            y = Util.get_data(right[0])
+            return lhs + rhs if (lhs.is_a?(::String) && rhs.is_a?(::String)) ||
+                                (lhs.is_a?(::Numeric) && rhs.is_a?(::Numeric))
 
-            return x + y if (x.is_a?(::String) && y.is_a?(::String)) || (x.is_a?(::Numeric) && y.is_a?(::Numeric))
-
-            raise Fhirpath::Error, "Cannot #{left} + #{right}"
+            date_time_plus(lhs, rhs) { raise Fhirpath::Error, "Cannot #{left} + #{right}" }
           end
 
-          def abs(_ctx, num)
-            return [] if blank?(num)
+          def minus(_ctx, left, right)
+            lhs, rhs = resolve_operands(left, right, "-")
 
-            ensure_number_singleton(num).abs
+            return lhs - rhs if lhs.is_a?(::Numeric) && rhs.is_a?(::Numeric)
+
+            rhs = Nodes::FPQuantity.new(-rhs.value, rhs.unit) if rhs.is_a?(Nodes::FPQuantity)
+            date_time_plus(lhs, rhs) { raise Fhirpath::Error, "Cannot #{left} - #{right}" }
           end
 
-          def ceiling(_ctx, num)
-            return [] if blank?(num)
-
-            ensure_number_singleton(num).ceil
+          def mul(_ctx, lhs, rhs)
+            lhs * rhs
           end
 
-          def floor(_ctx, num)
-            return [] if blank?(num)
+          def div(_ctx, lhs, rhs)
+            return [] if rhs.zero?
 
-            ensure_number_singleton(num).floor
+            Util.to_big_decimal(lhs) / Util.to_big_decimal(rhs)
           end
 
-          def truncate(_ctx, num)
-            return [] if blank?(num)
+          def intdiv(_ctx, lhs, rhs)
+            return [] if rhs.zero?
 
-            ensure_number_singleton(num).truncate
+            (Util.to_big_decimal(lhs) / Util.to_big_decimal(rhs)).truncate
           end
 
-          def exp(_ctx, num)
-            return [] if blank?(num)
+          def mod(_ctx, lhs, rhs)
+            return [] if rhs.zero?
 
-            BigMath.exp(Util.to_big_decimal(ensure_number_singleton(num)), LOG_PRECISION)
+            lhs % rhs
           end
 
-          def ln(_ctx, num)
-            return [] if blank?(num)
-
-            BigMath.log(Util.to_big_decimal(ensure_number_singleton(num)), LOG_PRECISION)
-          end
-
-          def log(_ctx, num, base)
-            return [] if blank?(num) || blank?(base)
-
-            value = Util.to_big_decimal(ensure_number_singleton(num))
-            base_value = Util.to_big_decimal(ensure_number_singleton(base))
-
-            (BigMath.log(value, LOG_PRECISION) / BigMath.log(base_value, LOG_PRECISION)).round(LOG_SCALE)
-          end
-
-          def sqrt(_ctx, num)
-            return [] if blank?(num)
-
-            value = ensure_number_singleton(num)
-            return [] if value.negative?
-
-            Util.to_big_decimal(value).sqrt(LOG_PRECISION)
-          end
-
-          def power(_ctx, num, degree)
-            return [] if blank?(num) || blank?(degree)
-
-            base = ensure_number_singleton(num)
-            exponent = ensure_number_singleton(degree)
-            return [] if base.negative? || exponent.to_i != exponent
-
-            base**exponent
-          end
-
-          def round(_ctx, num, precision)
-            return [] if blank?(num)
-
-            value = ensure_number_singleton(num)
-            return value.round if blank?(precision)
-
-            value.round(ensure_number_singleton(precision).to_i)
+          def amp(_ctx, lhs, rhs)
+            lhs = "" if lhs == []
+            rhs = "" if rhs == []
+            lhs + rhs
           end
 
           private
 
-          # Mirrors fhirpath-py's is_empty: the argument may be the raw input collection
-          # (always an array) or an already-resolved param value (a raw number, or `[]` if the
-          # param expression itself was empty).
-          def blank?(value)
-            return false if value.is_a?(::Numeric)
+          # Mirrors fhirpath-py's own `xs = remove_duplicate_extension(xs_)` at the top of
+          # `plus`/`minus`: strip the "Cannot ... " length check down to the primitive operand,
+          # then unwrap it from its ResourceNode.
+          def resolve_operands(left, right, operator)
+            left = remove_duplicate_extension(left)
+            right = remove_duplicate_extension(right)
+            raise Fhirpath::Error, "Cannot #{left} #{operator} #{right}" if left.length != 1 || right.length != 1
 
-            Util.empty?(value)
+            [Util.get_data(left[0]), Util.get_data(right[0])]
           end
 
-          # Mirrors fhirpath-py's ensure_number_singleton: accepts either a raw number
-          # (an already-resolved param) or a singleton collection (the raw input data).
-          def ensure_number_singleton(value)
-            data = Util.get_data(value)
-            return data if data.is_a?(::Numeric)
+          # A FHIR primitive element with an "_x" extension companion (e.g. "birthDate" +
+          # "_birthDate") navigates to a 2-item collection: the primitive value, then a
+          # ResourceNode wrapping just its `{"extension": [...]}` sibling. Mirrors
+          # fhirpath-py's equality.remove_duplicate_extension (its own comment calls this "a
+          # temporary solution... needs to be fixed to a better solution") — `+`/`-` only care
+          # about the primitive value.
+          def remove_duplicate_extension(list)
+            second = list[1]
+            return list unless list.length == 2 && second.is_a?(Nodes::ResourceNode) &&
+                               second.data.is_a?(::Hash) && second.data.key?("extension")
 
-            unless data.is_a?(::Array) && data.length == 1
-              raise Fhirpath::Error, "Expected list with number, but got #{data.inspect}"
+            list.first(1)
+          end
+
+          # A duration quantity added to (or, via `minus`, subtracted from) a date/time value —
+          # https://hl7.org/fhirpath/#datetime-arithmetic. `lhs` may already be an FPDateTime/
+          # FPTime (e.g. the left side was itself a date/time literal), or a raw String that
+          # happens to be date/time-shaped (e.g. a FHIR "date"/"dateTime"/"time" element's raw
+          # value navigated without a model, so it was never converted to an FP_* type) — either
+          # way, if it parses as a date/time and `rhs` is a quantity, delegate to its `#plus`.
+          def date_time_plus(lhs, rhs)
+            return yield unless rhs.is_a?(Nodes::FPQuantity)
+
+            target = lhs.is_a?(::String) ? coerce_date_or_time(lhs) : lhs
+            return yield unless target.is_a?(Nodes::FPDateTime) || target.is_a?(Nodes::FPTime)
+
+            target.plus(rhs)
+          end
+
+          def coerce_date_or_time(str)
+            Nodes::FPDateTime.new(str)
+          rescue Fhirpath::Error
+            begin
+              Nodes::FPTime.new(str)
+            rescue Fhirpath::Error
+              nil
             end
-
-            item = Util.get_data(data.first)
-            raise Fhirpath::Error, "Expected number, but got #{value.inspect}" unless item.is_a?(::Numeric)
-
-            item
           end
         end
       end
