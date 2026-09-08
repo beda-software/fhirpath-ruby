@@ -24,6 +24,7 @@ module Fhirpath
       def do_invoke(ctx, fn_name, data, raw_params)
         fn_name, invocation = lookup_invocation(ctx, fn_name)
         return [] if invocation[:nullable_input] && Util.nullable?(data)
+        return invoke_variadic(ctx, invocation, data, raw_params) if invocation[:variadic]
         return call_niladic(ctx, fn_name, invocation, data, raw_params) unless invocation[:arity]
 
         invoke_with_arity(ctx, fn_name, invocation, data, raw_params)
@@ -76,6 +77,14 @@ module Fhirpath
         raise Fhirpath::Error, "#{fn_name} expects no params" unless raw_params.nil? || Util.empty?(raw_params)
 
         Util.arraify(invocation[:fn].call(ctx, Util.arraify(data)))
+      end
+
+      def invoke_variadic(ctx, invocation, data, raw_params)
+        raw_params_list = raw_params.is_a?(::Array) ? raw_params : []
+        this_value = ctx[:this] || ctx[:root]
+        params = raw_params_list.map { |param| make_param(ctx, this_value, invocation[:variadic], param) }
+
+        Util.arraify(invocation[:fn].call(ctx, Util.arraify(data), *params))
       end
 
       def invoke_with_arity(ctx, fn_name, invocation, data, raw_params)

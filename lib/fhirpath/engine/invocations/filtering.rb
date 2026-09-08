@@ -3,10 +3,14 @@
 module Fhirpath
   module Engine
     module Invocations
-      # Ruby port of `where`/`select`/`repeat`/`ofType` from fhirpath-py's
+      # Ruby port of `where`/`select`/`repeat`/`ofType`/`first` from fhirpath-py's
       # fhirpathpy/engine/invocations/filtering.py.
       module Filtering
         class << self
+          def first(_ctx, coll)
+            coll.empty? ? [] : coll.first
+          end
+
           def where(ctx, data, expr)
             return [] unless data.is_a?(::Array)
 
