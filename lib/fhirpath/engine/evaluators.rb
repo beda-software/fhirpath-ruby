@@ -28,6 +28,17 @@ module Fhirpath
           Util.arraify(ctx[:total])
         end
 
+        # Ports fhirpath-py's external_constant_term ("%name"/"%`escaped name`" environment
+        # variables, https://hl7.org/fhirpath/#environment-variables).
+        def external_constant_term(ctx, _parent_data, node)
+          var_name = node["children"][0]["children"][0]["text"].delete("`")
+          unless ctx[:vars].key?(var_name)
+            raise Fhirpath::Error, "Attempting to access an undefined environment variable: #{var_name}"
+          end
+
+          Util.arraify(ctx[:vars][var_name])
+        end
+
         def literal_term(ctx, parent_data, node)
           term = node["children"]&.first
           term ? Engine.do_eval(ctx, parent_data, term) : [node["text"]]
@@ -95,6 +106,7 @@ module Fhirpath
         "ThisInvocation" => method(:this_invocation),
         "IndexInvocation" => method(:index_invocation),
         "TotalInvocation" => method(:total_invocation),
+        "ExternalConstantTerm" => method(:external_constant_term),
         "MemberInvocation" => method(:member_invocation),
         "FunctionInvocation" => method(:function_invocation),
         "PolarityExpression" => method(:polarity_expression),
