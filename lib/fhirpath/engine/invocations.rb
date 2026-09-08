@@ -9,6 +9,7 @@ require_relative "invocations/math"
 require_relative "invocations/subsetting"
 require_relative "invocations/misc"
 require_relative "invocations/strings"
+require_relative "invocations/datetime"
 
 module Fhirpath
   module Engine
@@ -53,6 +54,7 @@ module Fhirpath
         ">" => { fn: Equality.method(:gt), arity: { 2 => %w[Any Any] }, nullable: true },
         "+" => { fn: Math.method(:plus), arity: { 2 => %w[Any Any] }, nullable: true },
         "iif" => { fn: Misc.method(:iif), arity: { 2 => %w[Expr Expr], 3 => %w[Expr Expr Expr] } },
+        "trace" => { fn: Misc.method(:trace), arity: { 0 => [], 1 => ["String"] } },
         "toInteger" => { fn: Misc.method(:to_integer) },
         "toDecimal" => { fn: Misc.method(:to_decimal) },
         "toString" => { fn: Misc.method(:to_string) },
@@ -94,7 +96,10 @@ module Fhirpath
         "power" => { fn: Math.method(:power), arity: { 1 => ["Number"] }, nullable: true },
         "round" => { fn: Math.method(:round), arity: { 1 => ["Number"] } },
         "sqrt" => { fn: Math.method(:sqrt) },
-        "truncate" => { fn: Math.method(:truncate) }
+        "truncate" => { fn: Math.method(:truncate) },
+        "now" => { fn: Datetime.method(:now) },
+        "today" => { fn: Datetime.method(:today) },
+        "timeOfDay" => { fn: Datetime.method(:time_of_day) }
       }.freeze
     end
   end

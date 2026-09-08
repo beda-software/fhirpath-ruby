@@ -21,6 +21,18 @@ module Fhirpath
             []
           end
 
+          # Logs the input collection under `label` (via ctx[:trace_fn] if the caller supplied
+          # one, else stdout) and returns it unchanged.
+          def trace(ctx, coll, label = "")
+            if ctx[:trace_fn].respond_to?(:call)
+              ctx[:trace_fn].call(label, coll)
+            else
+              puts "TRACE:[#{label}] #{coll}"
+            end
+
+            coll
+          end
+
           def to_integer(_ctx, coll)
             return [] if coll.length != 1
 
