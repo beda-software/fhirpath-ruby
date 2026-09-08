@@ -1,0 +1,13 @@
+/.bundle/
+/.yardoc
+/_yardoc/
+/coverage/
+/doc/
+/pkg/
+/spec/reports/
+/tmp/
+/.rspec_status
+/CLAUDE.local.md
+
+# Gems should not commit their lockfile — the gemspec's constraints are the source of truth.
+/Gemfile.lock
