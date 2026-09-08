@@ -5,9 +5,9 @@ require "bigdecimal"
 module Fhirpath
   module Engine
     module Invocations
-      # Ruby port of `iif`/`toInteger`/`toDecimal`/`toString`/`toDateTime`/`toTime`/`toQuantity`
-      # from fhirpath-py's fhirpathpy/engine/invocations/misc.py. `toBoolean`/`toDate` and the
-      # convertsTo* family aren't exercised yet.
+      # Ruby port of `iif`/`toInteger`/`toDecimal`/`toString`/`toDate`/`toDateTime`/`toTime`/
+      # `toQuantity` from fhirpath-py's fhirpathpy/engine/invocations/misc.py. `toBoolean` and
+      # the convertsTo* family aren't exercised yet.
       module Misc
         INT_REGEX = /\A[+-]?\d+\z/
         NUM_REGEX = /\A[+-]?\d+(\.\d+)?\z/
@@ -50,6 +50,12 @@ module Fhirpath
             return [] if coll.empty?
 
             Nodes::FPDateTime.new(Util.get_data(coll.first))
+          end
+
+          # fhirpath-py's to_date is, as written, identical to to_date_time (no truncation to
+          # date-only precision) — mirrored as-is.
+          def to_date(ctx, coll)
+            to_date_time(ctx, coll)
           end
 
           def to_time(_ctx, coll)

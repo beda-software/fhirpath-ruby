@@ -8,6 +8,7 @@ require_relative "invocations/combining"
 require_relative "invocations/math"
 require_relative "invocations/subsetting"
 require_relative "invocations/misc"
+require_relative "invocations/strings"
 
 module Fhirpath
   module Engine
@@ -55,9 +56,35 @@ module Fhirpath
         "toInteger" => { fn: Misc.method(:to_integer) },
         "toDecimal" => { fn: Misc.method(:to_decimal) },
         "toString" => { fn: Misc.method(:to_string) },
+        "toDate" => { fn: Misc.method(:to_date) },
         "toDateTime" => { fn: Misc.method(:to_date_time) },
         "toTime" => { fn: Misc.method(:to_time) },
-        "toQuantity" => { fn: Misc.method(:to_quantity), arity: { 0 => [], 1 => ["String"] } }
+        "toQuantity" => { fn: Misc.method(:to_quantity), arity: { 0 => [], 1 => ["String"] } },
+        "indexOf" => { fn: Strings.method(:index_of), arity: { 1 => ["String"] }, nullable_input: true },
+        "substring" => {
+          fn: Strings.method(:substring),
+          arity: { 1 => ["Integer"], 2 => %w[Integer Integer] },
+          nullable_input: true
+        },
+        "startsWith" => { fn: Strings.method(:starts_with), arity: { 1 => ["String"] }, nullable_input: true },
+        "endsWith" => { fn: Strings.method(:ends_with), arity: { 1 => ["String"] }, nullable_input: true },
+        "contains" => { fn: Strings.method(:contains), arity: { 1 => ["String"] }, nullable_input: true },
+        "upper" => { fn: Strings.method(:upper), nullable_input: true },
+        "lower" => { fn: Strings.method(:lower), nullable_input: true },
+        "replace" => { fn: Strings.method(:replace), arity: { 2 => %w[String String] }, nullable_input: true },
+        "matches" => { fn: Strings.method(:matches), arity: { 1 => ["String"] }, nullable_input: true },
+        "replaceMatches" => {
+          fn: Strings.method(:replace_matches),
+          arity: { 2 => %w[String String] },
+          nullable_input: true
+        },
+        "length" => { fn: Strings.method(:length), nullable_input: true },
+        "toChars" => { fn: Strings.method(:to_chars) },
+        "join" => { fn: Strings.method(:join), arity: { 0 => [], 1 => ["String"] } },
+        "split" => { fn: Strings.method(:split), arity: { 1 => ["String"] }, nullable_input: true },
+        "trim" => { fn: Strings.method(:trim), nullable_input: true },
+        "encode" => { fn: Strings.method(:encode), arity: { 1 => ["String"] } },
+        "decode" => { fn: Strings.method(:decode), arity: { 1 => ["String"] } }
       }.freeze
     end
   end
