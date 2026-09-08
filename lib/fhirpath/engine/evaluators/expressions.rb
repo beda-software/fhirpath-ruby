@@ -28,6 +28,18 @@ module Fhirpath
         def union_expression(ctx, parent_data, node)
           Engine.infix_invoke(ctx, "|", parent_data, node["children"])
         end
+
+        # Ports fhirpath-py's alias_op_expression({"is": "isOp", "as": "asOp"}): "is"/"as" used
+        # as infix operators (e.g. "x is Boolean") dispatch to the "...Op" invocation names.
+        TYPE_EXPRESSION_ALIASES = { "is" => "isOp", "as" => "asOp" }.freeze
+
+        def type_expression(ctx, parent_data, node)
+          op = node["terminalNodeText"].first
+          alias_name = TYPE_EXPRESSION_ALIASES[op]
+          raise Fhirpath::Error, "Do not know how to alias #{op} by #{TYPE_EXPRESSION_ALIASES}" unless alias_name
+
+          Engine.infix_invoke(ctx, alias_name, parent_data, node["children"])
+        end
       end
     end
   end

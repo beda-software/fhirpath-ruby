@@ -10,6 +10,7 @@ require_relative "invocations/subsetting"
 require_relative "invocations/misc"
 require_relative "invocations/strings"
 require_relative "invocations/datetime"
+require_relative "invocations/types"
 
 module Fhirpath
   module Engine
@@ -22,6 +23,11 @@ module Fhirpath
         "select" => { fn: Filtering.method(:select), arity: { 1 => ["Expr"] } },
         "repeat" => { fn: Filtering.method(:repeat), arity: { 1 => ["Expr"] } },
         "ofType" => { fn: Filtering.method(:of_type), arity: { 1 => ["TypeSpecifier"] } },
+        "extension" => { fn: Filtering.method(:extension), arity: { 1 => ["String"] } },
+        "is" => { fn: Types.method(:is), arity: { 1 => ["TypeSpecifier"] } },
+        "as" => { fn: Types.method(:as), arity: { 1 => ["TypeSpecifier"] } },
+        "isOp" => { fn: Types.method(:is), arity: { 2 => %w[Any TypeSpecifier] } },
+        "asOp" => { fn: Types.method(:as), arity: { 2 => %w[Any TypeSpecifier] } },
         "single" => { fn: Filtering.method(:single) },
         "first" => { fn: Filtering.method(:first) },
         "last" => { fn: Filtering.method(:last) },

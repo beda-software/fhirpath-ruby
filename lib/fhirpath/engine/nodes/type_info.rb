@@ -5,9 +5,13 @@ require "bigdecimal"
 module Fhirpath
   module Engine
     module Nodes
-      # Ruby port of fhirpath-py's TypeInfo (fhirpathpy/engine/nodes.py), used by `ofType`.
-      # Model-aware type hierarchy resolution (`TypeInfo.model`, used by `is`/`as`) isn't ported
-      # yet — only the model-less path needed by `ofType` without a model.
+      # Ruby port of fhirpath-py's TypeInfo (fhirpathpy/engine/nodes.py), used by `ofType`/`is`/
+      # `as`. fhirpath-py stashes the active model on a `TypeInfo.model` class attribute (set as
+      # a side effect inside is_fn/as_fn, with an acknowledged "TODO: incorrect place" — it's a
+      # workaround for ResourceNode#get_type_info not otherwise having access to ctx); here the
+      # model is threaded through explicitly instead, since a class-level global would make
+      # model-less and model-bearing `is`/`as` calls interfere across evaluations run in the
+      # same process (as this gem's own test suite does).
       class TypeInfo
         SYSTEM = "System"
         FHIR = "FHIR"
@@ -19,17 +23,29 @@ module Fhirpath
           @namespace = namespace
         end
 
-        def is_(other)
-          return false unless other.is_a?(TypeInfo)
-          return false unless namespace.nil? || other.namespace.nil? || namespace == other.namespace
+        def is_(other, model)
+          return false unless other.is_a?(TypeInfo) && namespace_compatible?(other)
+          return name == other.name unless model && (namespace.nil? || namespace == FHIR)
 
-          name == other.name
+          self.class.subtype?(model, name, other.name)
         end
 
-        def self.from_value(value)
-          return value.type_info if value.is_a?(ResourceNode)
+        def self.from_value(value, model)
+          return value.type_info(model) if value.is_a?(ResourceNode)
 
           create_by_value_in_namespace(SYSTEM, value)
+        end
+
+        # Walks the model's type hierarchy (subtype -> parent, falling back to path2Type) from
+        # type_name looking for super_type.
+        def self.subtype?(model, type_name, super_type)
+          while type_name
+            return true if type_name == super_type
+
+            type_name = model.dig("type2Parent", type_name) || model.dig("path2Type", type_name)
+          end
+
+          false
         end
 
         def self.create_by_value_in_namespace(namespace, value)
@@ -53,6 +69,12 @@ module Fhirpath
 
           matched = TYPE_NAMES_BY_CLASS.find { |klass, _name| value.is_a?(klass) }
           matched ? matched.last : value.class.name
+        end
+
+        private
+
+        def namespace_compatible?(other)
+          namespace.nil? || other.namespace.nil? || namespace == other.namespace
         end
       end
     end

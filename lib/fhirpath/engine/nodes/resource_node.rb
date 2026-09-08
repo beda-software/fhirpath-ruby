@@ -23,14 +23,17 @@ module Fhirpath
           data == (other.is_a?(ResourceNode) ? other.data : other)
         end
 
-        # No model-aware typing (used by `is`/`as`) yet, so this always resolves via the raw
-        # data's Ruby class rather than a FHIR model's type hierarchy.
-        def type_info
+        # A path with no dot is already a bare type name (e.g. "Observation", or "id" once
+        # path2Type has resolved it during navigation). A dotted path with a model active means
+        # this node is a nested element with no specific named type — a FHIR BackboneElement;
+        # without a model, fall back to inferring the type from the raw Ruby value.
+        def type_info(model)
           return nil if path.nil?
 
           match = path.match(/\ASystem\.(.*)\z/)
           return TypeInfo.new(match[1], TypeInfo::SYSTEM) if match
           return TypeInfo.new(path, TypeInfo::FHIR) unless path.include?(".")
+          return TypeInfo.new("BackboneElement", TypeInfo::FHIR) if model
 
           TypeInfo.create_by_value_in_namespace(TypeInfo::FHIR, data)
         end

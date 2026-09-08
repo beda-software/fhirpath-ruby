@@ -4,7 +4,7 @@ module Fhirpath
   module Engine
     module Invocations
       # Ruby port of `where`/`select`/`repeat`/`ofType`/`single`/`first`/`last`/`tail`/`take`/
-      # `skip` from fhirpath-py's fhirpathpy/engine/invocations/filtering.py.
+      # `skip`/`extension` from fhirpath-py's fhirpathpy/engine/invocations/filtering.py.
       module Filtering
         class << self
           def single(_ctx, coll)
@@ -68,8 +68,18 @@ module Fhirpath
             result
           end
 
-          def of_type(_ctx, coll, type_info)
-            coll.select { |value| Nodes::TypeInfo.from_value(value).is_(type_info) }
+          def of_type(ctx, coll, type_info)
+            coll.select { |value| Nodes::TypeInfo.from_value(value, ctx[:model]).is_(type_info, ctx[:model]) }
+          end
+
+          def extension(_ctx, data, url)
+            data.each_with_object([]) do |item, acc|
+              element = Util.get_data(item)
+              next unless element.is_a?(::Hash)
+
+              match = (element["extension"] || []).find { |ext| ext["url"] == url }
+              acc << Nodes::ResourceNode.create_node(match, "Extension") if match
+            end
           end
 
           private

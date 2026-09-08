@@ -99,6 +99,7 @@ module Fhirpath
         "UnionExpression" => method(:union_expression),
         "EqualityExpression" => method(:op_expression),
         "InequalityExpression" => method(:op_expression),
+        "TypeExpression" => method(:type_expression),
         "AdditiveExpression" => method(:op_expression)
       }.freeze
     end
