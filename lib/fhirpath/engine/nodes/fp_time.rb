@@ -65,6 +65,16 @@ module Fhirpath
           (utc.hour * 3600) + (utc.min * 60) + utc.sec + utc.subsec
         end
 
+        # See FPDateTime#compare for the precision-comparison rationale.
+        def compare(other)
+          fields = shared_fields(other)
+          self_precision, other_precision = precisions(other, fields)
+
+          return time_of_day <=> other.time_of_day if self_precision == other_precision
+
+          compare_by_field(other, fields, [self_precision, other_precision].min)
+        end
+
         protected
 
         def normalized
@@ -95,6 +105,17 @@ module Fhirpath
           end
 
           return false if timezone? != other.timezone?
+
+          nil
+        end
+
+        def compare_by_field(other, fields, min_precision)
+          fields.first(min_precision).each do |c|
+            return -1 if normalized[c].nil? || other.normalized[c].nil?
+
+            ordinal = normalized[c] <=> other.normalized[c]
+            return ordinal unless ordinal.zero?
+          end
 
           nil
         end

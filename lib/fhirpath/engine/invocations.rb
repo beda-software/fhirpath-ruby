@@ -53,6 +53,8 @@ module Fhirpath
         "!~" => { fn: Equality.method(:unequival), arity: { 2 => %w[Any Any] } },
         "<" => { fn: Equality.method(:lt), arity: { 2 => %w[Any Any] }, nullable: true },
         ">" => { fn: Equality.method(:gt), arity: { 2 => %w[Any Any] }, nullable: true },
+        "<=" => { fn: Equality.method(:lte), arity: { 2 => %w[Any Any] }, nullable: true },
+        ">=" => { fn: Equality.method(:gte), arity: { 2 => %w[Any Any] }, nullable: true },
         "+" => { fn: Math.method(:plus), arity: { 2 => %w[Any Any] }, nullable: true },
         "iif" => { fn: Misc.method(:iif), arity: { 2 => %w[Expr Expr], 3 => %w[Expr Expr Expr] } },
         "trace" => { fn: Misc.method(:trace), arity: { 0 => [], 1 => ["String"] } },

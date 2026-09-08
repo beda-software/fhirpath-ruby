@@ -1,13 +1,14 @@
 # frozen_string_literal: true
 
 require_relative "equivalence"
+require_relative "inequality"
 
 module Fhirpath
   module Engine
     module Invocations
-      # Ruby port of `=`/`!=`/`<`/`>` from fhirpath-py's fhirpathpy/engine/invocations/
-      # equality.py. `~`/`!~` (equivalence) live in equivalence.rb, which reopens this module.
-      # `typecheck`'s inequality type-coercion isn't exercised yet.
+      # Ruby port of `=`/`!=` from fhirpath-py's fhirpathpy/engine/invocations/equality.py.
+      # `~`/`!~` (equivalence) live in equivalence.rb and `<`/`>`/`<=`/`>=` in inequality.rb,
+      # both of which reopen this module (and use datetime_value?/coerce_datetime, below).
       module Equality
         class << self
           def equal(_ctx, left, right)
@@ -17,14 +18,6 @@ module Fhirpath
           def unequal(_ctx, left, right)
             result = equality(left, right)
             result.nil? ? nil : !result
-          end
-
-          def gt(_ctx, left, right)
-            Util.get_data(left[0]) > Util.get_data(right[0])
-          end
-
-          def lt(_ctx, left, right)
-            Util.get_data(left[0]) < Util.get_data(right[0])
           end
 
           private

@@ -60,6 +60,18 @@ module Fhirpath
                    component_value(:hour), component_value(:minute), second_value, timezone).getutc
         end
 
+        # Per https://hl7.org/fhirpath/#comparison: -1/0/1, or nil (spec: empty) when ordering
+        # can't be resolved at a shared precision (fields match up to the lower precision, but
+        # neither is a prefix of the other so which sorts first is undefined).
+        def compare(other)
+          fields = shared_fields(other)
+          self_precision, other_precision = precisions(other, fields)
+
+          return to_instant <=> other.to_instant if self_precision == other_precision
+
+          compare_by_field(other, fields, [self_precision, other_precision].min)
+        end
+
         protected
 
         # UTC-shifted calendar fields, revealing only the components this literal actually
@@ -93,6 +105,17 @@ module Fhirpath
           end
 
           return false if timezone? != other.timezone?
+
+          nil
+        end
+
+        def compare_by_field(other, fields, min_precision)
+          fields.first(min_precision).each do |c|
+            return -1 if normalized[c].nil? || other.normalized[c].nil?
+
+            ordinal = normalized[c] <=> other.normalized[c]
+            return ordinal unless ordinal.zero?
+          end
 
           nil
         end
