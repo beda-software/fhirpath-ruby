@@ -7,6 +7,7 @@ require_relative "invocations/existence"
 require_relative "invocations/combining"
 require_relative "invocations/math"
 require_relative "invocations/subsetting"
+require_relative "invocations/misc"
 
 module Fhirpath
   module Engine
@@ -45,9 +46,18 @@ module Fhirpath
         "distinct" => { fn: Existence.method(:distinct) },
         "count" => { fn: Existence.method(:count) },
         "=" => { fn: Equality.method(:equal), arity: { 2 => %w[Any Any] }, nullable: true },
+        "!=" => { fn: Equality.method(:unequal), arity: { 2 => %w[Any Any] }, nullable: true },
+        "~" => { fn: Equality.method(:equival), arity: { 2 => %w[Any Any] } },
         "<" => { fn: Equality.method(:lt), arity: { 2 => %w[Any Any] }, nullable: true },
         ">" => { fn: Equality.method(:gt), arity: { 2 => %w[Any Any] }, nullable: true },
-        "+" => { fn: Math.method(:plus), arity: { 2 => %w[Any Any] }, nullable: true }
+        "+" => { fn: Math.method(:plus), arity: { 2 => %w[Any Any] }, nullable: true },
+        "iif" => { fn: Misc.method(:iif), arity: { 2 => %w[Expr Expr], 3 => %w[Expr Expr Expr] } },
+        "toInteger" => { fn: Misc.method(:to_integer) },
+        "toDecimal" => { fn: Misc.method(:to_decimal) },
+        "toString" => { fn: Misc.method(:to_string) },
+        "toDateTime" => { fn: Misc.method(:to_date_time) },
+        "toTime" => { fn: Misc.method(:to_time) },
+        "toQuantity" => { fn: Misc.method(:to_quantity), arity: { 0 => [], 1 => ["String"] } }
       }.freeze
     end
   end

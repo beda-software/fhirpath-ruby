@@ -6,7 +6,7 @@ module Fhirpath
       # Ruby port of fhirpath-py's ResourceNode (fhirpathpy/engine/nodes.py): wraps a node of
       # data reached while navigating a resource, tracking its FHIRPath "path" (e.g.
       # "Patient.name"), the property name/index it was reached through, and the raw data
-      # itself. convert_data (used for primitive Quantity data) isn't ported yet.
+      # itself.
       class ResourceNode
         attr_reader :data, :path, :prop_name, :index
 
@@ -33,6 +33,17 @@ module Fhirpath
           return TypeInfo.new(path, TypeInfo::FHIR) unless path.include?(".")
 
           TypeInfo.create_by_value_in_namespace(TypeInfo::FHIR, data)
+        end
+
+        # A UCUM-coded quantity-shaped object (e.g. a FHIR Quantity/Duration/Age element:
+        # {"value" => ..., "unit" => ..., "system" => "http://unitsofmeasure.org", "code" => ...})
+        # resolves to an FPQuantity built from its "code", not its (human-readable) "unit".
+        def convert_data
+          return data unless data.is_a?(::Hash) && data["system"] == "http://unitsofmeasure.org"
+
+          code = data["code"]
+          unit = FPQuantity::TIME_UNITS_TO_UCUM[code] || "'#{code}'"
+          FPQuantity.new(data["value"], unit)
         end
 
         def self.create_node(data, path = nil, prop_name: nil, index: nil)

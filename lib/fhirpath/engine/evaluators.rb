@@ -85,6 +85,7 @@ module Fhirpath
         "BooleanLiteral" => method(:boolean_literal),
         "QuantityLiteral" => method(:quantity_literal),
         "DateTimeLiteral" => method(:date_time_literal),
+        "TimeLiteral" => method(:time_literal),
         "InvocationTerm" => method(:invocation_term),
         "ParenthesizedTerm" => method(:parenthesized_term),
         "ThisInvocation" => method(:this_invocation),

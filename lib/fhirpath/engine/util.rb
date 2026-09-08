@@ -10,6 +10,10 @@ module Fhirpath
           value.is_a?(Nodes::ResourceNode) ? value.data : value
         end
 
+        def val_data_converted(value)
+          value.is_a?(Nodes::ResourceNode) ? value.convert_data : value
+        end
+
         def capitalized?(value)
           value.is_a?(::String) && !value.empty? && value[0] == value[0].upcase
         end
@@ -41,6 +45,15 @@ module Fhirpath
 
         def true?(value)
           value == true || (value.is_a?(::Array) && value.length == 1 && value.first == true)
+        end
+
+        # BigDecimal#to_s always includes a fractional part (e.g. "7.0"); FHIRPath's decimal
+        # string representation (used by `toString`, FP_Quantity#to_s, ...) drops it for
+        # whole-number values (e.g. "7"), matching Python's Decimal str().
+        def format_number(value)
+          return value.to_s unless value.is_a?(::BigDecimal)
+
+          value.frac.zero? ? value.to_i.to_s : value.to_s("F")
         end
 
         # Dedupes values that compare equal after normalizing hash key order (so

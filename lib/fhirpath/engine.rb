@@ -3,10 +3,12 @@
 require_relative "engine/nodes/resource_node"
 require_relative "engine/nodes/fp_quantity"
 require_relative "engine/nodes/fp_date_time"
+require_relative "engine/nodes/fp_time"
 require_relative "engine/nodes/type_info"
 require_relative "engine/util"
 require_relative "engine/invocations"
 require_relative "engine/evaluators"
+require_relative "engine/param_resolution"
 
 module Fhirpath
   # Ruby port of fhirpath-py's fhirpathpy/engine/__init__.py: walks the AST built by
@@ -39,52 +41,7 @@ module Fhirpath
         call_invocation(invocation, params)
       end
 
-      def make_param(ctx, parent_data, node_type, param)
-        return build_expr_param(ctx, param) if node_type == "Expr"
-        return eval_param(ctx, parent_data, param) if node_type == "Any"
-        return eval_param(ctx, ctx[:this] || ctx[:root], param) if node_type == "AnyAtRoot"
-        return type_specifier(param) if node_type == "TypeSpecifier"
-        return check_integer_param(ctx, parent_data, param) if node_type == "Integer"
-
-        raise Fhirpath::Error, "Implement me for #{node_type}"
-      end
-
       private
-
-      # Ports fhirpath-py's make_param's singleton + param_check_table["Integer"] handling
-      # (check_integer_param): evaluate the param as a singleton against parent_data, then
-      # require it to be integer-valued.
-      def check_integer_param(ctx, parent_data, param)
-        ctx[:this] = parent_data
-        res = do_eval(ctx, parent_data, param)
-        return [] if res.empty?
-
-        raise Fhirpath::Error, "Unexpected collection; expected singleton of type Integer" if res.length > 1
-
-        data = Util.get_data(res.first)
-        raise Fhirpath::Error, "Expected integer, got: #{data.inspect}" unless integer_valued?(data)
-
-        data
-      end
-
-      def integer_valued?(data)
-        data.is_a?(::Numeric) && data.to_i == data
-      end
-
-      # Ports fhirpath-py's module-level type_specifier: regardless of how the parameter node
-      # is shaped internally, its source text (e.g. "string", "FHIR.Patient") is what matters.
-      def type_specifier(node)
-        identifiers = node["text"].delete("`").split(".")
-
-        case identifiers.length
-        when 1
-          Nodes::TypeInfo.new(identifiers.first, nil)
-        when 2
-          Nodes::TypeInfo.new(identifiers[1], identifiers[0])
-        else
-          raise Fhirpath::Error, "Expected TypeSpecifier node, got #{node}"
-        end
-      end
 
       def lookup_invocation(ctx, fn_name)
         registry = invocation_registry(ctx)
@@ -130,18 +87,6 @@ module Fhirpath
 
       def positional_params(ctx, base_data, arg_types, raw_params, count)
         (0...count).map { |i| make_param(ctx, base_data, arg_types[i], raw_params[i]) }
-      end
-
-      def build_expr_param(ctx, param)
-        lambda do |data|
-          ctx[:this] = Util.arraify(data)
-          do_eval(ctx, ctx[:this], param)
-        end
-      end
-
-      def eval_param(ctx, data, param)
-        ctx[:this] = data
-        do_eval(ctx, data, param)
       end
 
       def invocation_registry(ctx)

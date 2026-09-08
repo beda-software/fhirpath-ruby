@@ -49,6 +49,10 @@ module Fhirpath
           [Nodes::FPDateTime.new(node["text"][1..])]
         end
 
+        def time_literal(_ctx, _parent_data, node)
+          [Nodes::FPTime.new(node["text"][2..])]
+        end
+
         private
 
         # A Unit node's terminalNodeText holds a quoted UCUM unit (e.g. "'mo'") directly; for a
