@@ -52,20 +52,20 @@ module Fhirpath
           def exp(_ctx, num)
             return [] if blank?(num)
 
-            BigMath.exp(to_big_decimal(ensure_number_singleton(num)), LOG_PRECISION)
+            BigMath.exp(Util.to_big_decimal(ensure_number_singleton(num)), LOG_PRECISION)
           end
 
           def ln(_ctx, num)
             return [] if blank?(num)
 
-            BigMath.log(to_big_decimal(ensure_number_singleton(num)), LOG_PRECISION)
+            BigMath.log(Util.to_big_decimal(ensure_number_singleton(num)), LOG_PRECISION)
           end
 
           def log(_ctx, num, base)
             return [] if blank?(num) || blank?(base)
 
-            value = to_big_decimal(ensure_number_singleton(num))
-            base_value = to_big_decimal(ensure_number_singleton(base))
+            value = Util.to_big_decimal(ensure_number_singleton(num))
+            base_value = Util.to_big_decimal(ensure_number_singleton(base))
 
             (BigMath.log(value, LOG_PRECISION) / BigMath.log(base_value, LOG_PRECISION)).round(LOG_SCALE)
           end
@@ -76,7 +76,7 @@ module Fhirpath
             value = ensure_number_singleton(num)
             return [] if value.negative?
 
-            to_big_decimal(value).sqrt(LOG_PRECISION)
+            Util.to_big_decimal(value).sqrt(LOG_PRECISION)
           end
 
           def power(_ctx, num, degree)
@@ -123,13 +123,6 @@ module Fhirpath
             raise Fhirpath::Error, "Expected number, but got #{value.inspect}" unless item.is_a?(::Numeric)
 
             item
-          end
-
-          def to_big_decimal(value)
-            return value if value.is_a?(::BigDecimal)
-            return BigDecimal(value) if value.is_a?(::Integer)
-
-            BigDecimal(value.to_s)
           end
         end
       end

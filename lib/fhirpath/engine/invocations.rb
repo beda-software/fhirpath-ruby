@@ -50,6 +50,7 @@ module Fhirpath
         "=" => { fn: Equality.method(:equal), arity: { 2 => %w[Any Any] }, nullable: true },
         "!=" => { fn: Equality.method(:unequal), arity: { 2 => %w[Any Any] }, nullable: true },
         "~" => { fn: Equality.method(:equival), arity: { 2 => %w[Any Any] } },
+        "!~" => { fn: Equality.method(:unequival), arity: { 2 => %w[Any Any] } },
         "<" => { fn: Equality.method(:lt), arity: { 2 => %w[Any Any] }, nullable: true },
         ">" => { fn: Equality.method(:gt), arity: { 2 => %w[Any Any] }, nullable: true },
         "+" => { fn: Math.method(:plus), arity: { 2 => %w[Any Any] }, nullable: true },

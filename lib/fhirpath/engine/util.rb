@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "bigdecimal"
+
 module Fhirpath
   module Engine
     # Ruby port of fhirpath-py's fhirpathpy/engine/util.py: small helpers shared across the
@@ -54,6 +56,13 @@ module Fhirpath
           return value.to_s unless value.is_a?(::BigDecimal)
 
           value.frac.zero? ? value.to_i.to_s : value.to_s("F")
+        end
+
+        def to_big_decimal(value)
+          return value if value.is_a?(::BigDecimal)
+          return BigDecimal(value) if value.is_a?(::Integer)
+
+          BigDecimal(value.to_s)
         end
 
         # Dedupes values that compare equal after normalizing hash key order (so
