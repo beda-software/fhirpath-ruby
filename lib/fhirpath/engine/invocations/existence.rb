@@ -24,7 +24,7 @@ module Fhirpath
               raise Fhirpath::Error, "Unexpected collection #{coll.inspect}; expected singleton of type Boolean"
             end
 
-            !boolean_value(coll.first)
+            !singleton_truthy?(coll.first)
           end
 
           def exists(ctx, coll, expr = nil)
@@ -84,6 +84,14 @@ module Fhirpath
             raise Fhirpath::Error, "Expected boolean, but got: #{value.inspect}" unless [true, false].include?(value)
 
             value
+          end
+
+          # Mirrors fhirpath-py's boolean_singleton (used only by `not`, unlike the strict
+          # boolean_value above used by allTrue/anyTrue/allFalse/anyFalse): a present non-empty
+          # singleton coerces to `true` unless it's literally the boolean `false`.
+          def singleton_truthy?(item)
+            value = Util.get_data(item)
+            [true, false].include?(value) ? value : true
           end
 
           def distinct_resource_nodes(coll)

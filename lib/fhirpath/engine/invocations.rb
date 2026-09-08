@@ -12,6 +12,7 @@ require_relative "invocations/strings"
 require_relative "invocations/datetime"
 require_relative "invocations/types"
 require_relative "invocations/collections"
+require_relative "invocations/logic"
 
 module Fhirpath
   module Engine
@@ -64,6 +65,10 @@ module Fhirpath
         ">=" => { fn: Equality.method(:gte), arity: { 2 => %w[Any Any] }, nullable: true },
         "containsOp" => { fn: Collections.method(:contains), arity: { 2 => %w[Any Any] } },
         "inOp" => { fn: Collections.method(:in), arity: { 2 => %w[Any Any] } },
+        "or" => { fn: Logic.method(:or_op), arity: { 2 => %w[Boolean Boolean] } },
+        "and" => { fn: Logic.method(:and_op), arity: { 2 => %w[Boolean Boolean] } },
+        "xor" => { fn: Logic.method(:xor_op), arity: { 2 => %w[Boolean Boolean] } },
+        "implies" => { fn: Logic.method(:implies_op), arity: { 2 => %w[Boolean Boolean] } },
         "+" => { fn: Math.method(:plus), arity: { 2 => %w[Any Any] }, nullable: true },
         "iif" => { fn: Misc.method(:iif), arity: { 2 => %w[Expr Expr], 3 => %w[Expr Expr Expr] } },
         "trace" => { fn: Misc.method(:trace), arity: { 0 => [], 1 => ["String"] } },

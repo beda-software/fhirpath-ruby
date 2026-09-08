@@ -10,7 +10,8 @@ module Fhirpath
       SINGLETON_PARAM_CHECKS = {
         "Integer" => ->(data) { data.is_a?(::Numeric) && data.to_i == data },
         "Number" => ->(data) { data.is_a?(::Numeric) },
-        "String" => ->(data) { data.is_a?(::String) }
+        "String" => ->(data) { data.is_a?(::String) },
+        "Boolean" => ->(data) { [true, false].include?(data) }
       }.freeze
 
       def make_param(ctx, parent_data, node_type, param)

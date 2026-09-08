@@ -101,6 +101,10 @@ module Fhirpath
         "InequalityExpression" => method(:op_expression),
         "TypeExpression" => method(:type_expression),
         "MembershipExpression" => method(:membership_expression),
+        "OrExpression" => method(:op_expression),
+        "ImpliesExpression" => method(:op_expression),
+        "AndExpression" => method(:op_expression),
+        "XorExpression" => method(:op_expression),
         "AdditiveExpression" => method(:op_expression)
       }.freeze
     end
