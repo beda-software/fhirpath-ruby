@@ -1,4 +1,14 @@
 module Fhirpath
   VERSION: String
-  # See the writing guide of rbs: https://github.com/ruby/rbs#guides
+
+  class Error < StandardError
+  end
+
+  def self.evaluate: (FHIR::Model | Array[FHIR::Model] resource, untyped path, ?untyped context, ?Module? model, ?untyped options) -> Array[untyped]
+
+  def self.compile: [SRC < FHIR::Model, DST] (untyped path, ?Module? model, ?untyped options) -> ^(SRC resource, ?untyped context) -> Array[DST]
+
+  def self.compile_as_array: [SRC < FHIR::Model, DST] (String expression, ?Module? model) -> ^(SRC resource, ?untyped context) -> Array[DST]
+
+  def self.compile_as_first: [SRC < FHIR::Model, DST] (String expression, ?Module? model) -> ^(SRC resource, ?untyped context) -> DST?
 end
