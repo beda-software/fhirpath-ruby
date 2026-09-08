@@ -40,9 +40,15 @@ module Fhirpath
 
         # A UCUM-coded quantity-shaped object (e.g. a FHIR Quantity/Duration/Age element:
         # {"value" => ..., "unit" => ..., "system" => "http://unitsofmeasure.org", "code" => ...})
-        # resolves to an FPQuantity built from its "code", not its (human-readable) "unit".
+        # resolves to an FPQuantity built from its "code", not its (human-readable) "unit". A
+        # present "comparator" (e.g. ">5 mg") makes the value an inexact bound, not a precise
+        # quantity — System.Quantity has no comparator concept, so it can't be converted.
         def convert_data
           return data unless data.is_a?(::Hash) && data["system"] == "http://unitsofmeasure.org"
+
+          if data.key?("comparator")
+            raise Fhirpath::Error, "Cannot convert a Quantity with a comparator to System.Quantity"
+          end
 
           code = data["code"]
           unit = FPQuantity::TIME_UNITS_TO_UCUM[code] || "'#{code}'"
