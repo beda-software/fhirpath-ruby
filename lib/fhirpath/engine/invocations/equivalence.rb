@@ -33,8 +33,8 @@ module Fhirpath
 
             return false if left.length != right.length
 
-            x0 = Util.get_data(left.first)
-            y0 = Util.get_data(right.first)
+            x0 = Util.val_data_converted(left.first)
+            y0 = Util.val_data_converted(right.first)
             return datetime_equals(x0, y0) if datetime_value?(x0) || datetime_value?(y0)
 
             left.length == 1 ? value_equivalent?(x0, y0) : multiset_equivalent?(left, right)
@@ -48,10 +48,10 @@ module Fhirpath
           end
 
           def multiset_equivalent?(left, right)
-            remaining = right.map { |item| Util.get_data(item) }
+            remaining = right.map { |item| Util.val_data_converted(item) }
 
             left.all? do |item|
-              value = Util.get_data(item)
+              value = Util.val_data_converted(item)
               index = remaining.index { |candidate| value_equivalent?(value, candidate) == true }
               next false unless index
 

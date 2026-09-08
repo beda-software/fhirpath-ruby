@@ -40,7 +40,19 @@ module Fhirpath
           end
 
           def pairwise_equal?(left, right)
-            left.zip(right).all? { |a, b| Util.get_data(a) == Util.get_data(b) }
+            left.zip(right).all? { |a, b| values_equal?(Util.val_data_converted(a), Util.val_data_converted(b)) }
+          end
+
+          # A raw FHIR Quantity element, converted to a System.Quantity, keeps its UCUM `code`
+          # quoted as-is (e.g. "'a'") — comparing that against a literal using the calendar
+          # *word* form ("year") needs FPQuantity#deep_equal instead of plain `==`; see there.
+          def values_equal?(left_value, right_value)
+            if left_value.is_a?(Nodes::FPQuantity) && right_value.is_a?(Nodes::FPQuantity) &&
+               Nodes::FPQuantity::CALENDAR_WORDS.include?(right_value.unit)
+              return left_value.deep_equal(right_value)
+            end
+
+            left_value == right_value
           end
 
           def datetime_value?(value)

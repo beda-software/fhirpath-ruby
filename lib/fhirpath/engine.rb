@@ -2,6 +2,7 @@
 
 require_relative "engine/nodes/resource_node"
 require_relative "engine/nodes/fp_quantity"
+require_relative "engine/nodes/fp_quantity_deep_equal"
 require_relative "engine/nodes/fp_date_time"
 require_relative "engine/nodes/fp_date_time_arithmetic"
 require_relative "engine/nodes/fp_time"
