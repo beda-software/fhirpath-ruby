@@ -9,6 +9,7 @@ module Fhirpath
     class << self
       SINGLETON_PARAM_CHECKS = {
         "Integer" => ->(data) { data.is_a?(::Numeric) && data.to_i == data },
+        "Number" => ->(data) { data.is_a?(::Numeric) },
         "String" => ->(data) { data.is_a?(::String) }
       }.freeze
 

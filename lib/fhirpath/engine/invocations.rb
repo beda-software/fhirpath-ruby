@@ -84,7 +84,17 @@ module Fhirpath
         "split" => { fn: Strings.method(:split), arity: { 1 => ["String"] }, nullable_input: true },
         "trim" => { fn: Strings.method(:trim), nullable_input: true },
         "encode" => { fn: Strings.method(:encode), arity: { 1 => ["String"] } },
-        "decode" => { fn: Strings.method(:decode), arity: { 1 => ["String"] } }
+        "decode" => { fn: Strings.method(:decode), arity: { 1 => ["String"] } },
+        "abs" => { fn: Math.method(:abs) },
+        "ceiling" => { fn: Math.method(:ceiling) },
+        "exp" => { fn: Math.method(:exp) },
+        "floor" => { fn: Math.method(:floor) },
+        "ln" => { fn: Math.method(:ln) },
+        "log" => { fn: Math.method(:log), arity: { 1 => ["Number"] }, nullable: true },
+        "power" => { fn: Math.method(:power), arity: { 1 => ["Number"] }, nullable: true },
+        "round" => { fn: Math.method(:round), arity: { 1 => ["Number"] } },
+        "sqrt" => { fn: Math.method(:sqrt) },
+        "truncate" => { fn: Math.method(:truncate) }
       }.freeze
     end
   end
