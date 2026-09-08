@@ -100,6 +100,7 @@ module Fhirpath
         "EqualityExpression" => method(:op_expression),
         "InequalityExpression" => method(:op_expression),
         "TypeExpression" => method(:type_expression),
+        "MembershipExpression" => method(:membership_expression),
         "AdditiveExpression" => method(:op_expression)
       }.freeze
     end

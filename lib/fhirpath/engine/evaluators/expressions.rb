@@ -34,9 +34,22 @@ module Fhirpath
         TYPE_EXPRESSION_ALIASES = { "is" => "isOp", "as" => "asOp" }.freeze
 
         def type_expression(ctx, parent_data, node)
+          aliased_op_expression(ctx, parent_data, node, TYPE_EXPRESSION_ALIASES)
+        end
+
+        # Ports fhirpath-py's alias_op_expression({"contains": "containsOp", "in": "inOp"}).
+        MEMBERSHIP_EXPRESSION_ALIASES = { "contains" => "containsOp", "in" => "inOp" }.freeze
+
+        def membership_expression(ctx, parent_data, node)
+          aliased_op_expression(ctx, parent_data, node, MEMBERSHIP_EXPRESSION_ALIASES)
+        end
+
+        private
+
+        def aliased_op_expression(ctx, parent_data, node, aliases)
           op = node["terminalNodeText"].first
-          alias_name = TYPE_EXPRESSION_ALIASES[op]
-          raise Fhirpath::Error, "Do not know how to alias #{op} by #{TYPE_EXPRESSION_ALIASES}" unless alias_name
+          alias_name = aliases[op]
+          raise Fhirpath::Error, "Do not know how to alias #{op} by #{aliases}" unless alias_name
 
           Engine.infix_invoke(ctx, alias_name, parent_data, node["children"])
         end
