@@ -3,6 +3,7 @@
 require_relative "engine/nodes/resource_node"
 require_relative "engine/nodes/fp_quantity"
 require_relative "engine/nodes/fp_date_time"
+require_relative "engine/nodes/type_info"
 require_relative "engine/util"
 require_relative "engine/invocations"
 require_relative "engine/evaluators"
@@ -41,11 +42,27 @@ module Fhirpath
         return build_expr_param(ctx, param) if node_type == "Expr"
         return eval_param(ctx, parent_data, param) if node_type == "Any"
         return eval_param(ctx, ctx[:this] || ctx[:root], param) if node_type == "AnyAtRoot"
+        return type_specifier(param) if node_type == "TypeSpecifier"
 
         raise Fhirpath::Error, "Implement me for #{node_type}"
       end
 
       private
+
+      # Ports fhirpath-py's module-level type_specifier: regardless of how the parameter node
+      # is shaped internally, its source text (e.g. "string", "FHIR.Patient") is what matters.
+      def type_specifier(node)
+        identifiers = node["text"].delete("`").split(".")
+
+        case identifiers.length
+        when 1
+          Nodes::TypeInfo.new(identifiers.first, nil)
+        when 2
+          Nodes::TypeInfo.new(identifiers[1], identifiers[0])
+        else
+          raise Fhirpath::Error, "Expected TypeSpecifier node, got #{node}"
+        end
+      end
 
       def lookup_invocation(ctx, fn_name)
         registry = invocation_registry(ctx)

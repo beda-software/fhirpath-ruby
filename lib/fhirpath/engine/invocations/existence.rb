@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require "bigdecimal"
-
 require_relative "filtering"
 
 module Fhirpath
@@ -10,19 +8,6 @@ module Fhirpath
       # Ruby port of fhirpath-py's fhirpathpy/engine/invocations/existence.py (FHIRPath spec
       # section 5.1).
       module Existence
-        # Time/calendar-duration units that convert to a common scale, used by `distinct` to
-        # treat e.g. "1 year" and "12 months" as equal (https://hl7.org/fhirpath/#equals).
-        CONVERSION_FACTORS = {
-          "weeks" => BigDecimal("604800000"), "'wk'" => BigDecimal("604800000"), "week" => BigDecimal("604800000"),
-          "days" => BigDecimal("86400000"), "'d'" => BigDecimal("86400000"), "day" => BigDecimal("86400000"),
-          "hours" => BigDecimal("3600000"), "'h'" => BigDecimal("3600000"), "hour" => BigDecimal("3600000"),
-          "minutes" => BigDecimal("60000"), "'min'" => BigDecimal("60000"), "minute" => BigDecimal("60000"),
-          "seconds" => BigDecimal("1000"), "'s'" => BigDecimal("1000"), "second" => BigDecimal("1000"),
-          "milliseconds" => BigDecimal("1"), "'ms'" => BigDecimal("1"), "millisecond" => BigDecimal("1"),
-          "years" => BigDecimal("12"), "'a'" => BigDecimal("12"), "year" => BigDecimal("12"),
-          "months" => BigDecimal("1"), "'mo'" => BigDecimal("1"), "month" => BigDecimal("1")
-        }.freeze
-
         class << self
           def empty(_ctx, value)
             Util.empty?(value)
@@ -105,20 +90,11 @@ module Fhirpath
             Util.uniq(coll.map(&:data)).map { |item| Nodes::ResourceNode.create_node(item) }
           end
 
-          # Dedupes by converting each quantity onto a common scale (see CONVERSION_FACTORS),
-          # keeping the first-seen original quantity per distinct converted value; a quantity
-          # whose unit isn't in CONVERSION_FACTORS is dropped, matching fhirpath-py.
+          # FP_Quantity#== already treats e.g. "1 year" and "12 months" as equal
+          # (https://hl7.org/fhirpath/#equals); dedupe with a linear scan since quantities
+          # aren't otherwise hashable/canonicalizable the way Util.uniq's values are.
           def distinct_quantities(coll)
-            converted = {}
-
-            coll.each do |interval|
-              factor = CONVERSION_FACTORS[interval.unit]
-              next unless factor
-
-              converted[interval.value * factor] ||= interval
-            end
-
-            converted.values
+            coll.each_with_object([]) { |value, acc| acc << value unless acc.include?(value) }
           end
         end
       end

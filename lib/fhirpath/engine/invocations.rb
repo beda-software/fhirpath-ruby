@@ -5,6 +5,7 @@ require_relative "invocations/filtering"
 require_relative "invocations/equality"
 require_relative "invocations/existence"
 require_relative "invocations/combining"
+require_relative "invocations/math"
 
 module Fhirpath
   module Engine
@@ -14,6 +15,9 @@ module Fhirpath
       # the category modules required above.
       REGISTRY = {
         "where" => { fn: Filtering.method(:where), arity: { 1 => ["Expr"] } },
+        "select" => { fn: Filtering.method(:select), arity: { 1 => ["Expr"] } },
+        "repeat" => { fn: Filtering.method(:repeat), arity: { 1 => ["Expr"] } },
+        "ofType" => { fn: Filtering.method(:of_type), arity: { 1 => ["TypeSpecifier"] } },
         "children" => { fn: Navigation.method(:children) },
         "descendants" => { fn: Navigation.method(:descendants) },
         "combine" => { fn: Combining.method(:combine), arity: { 1 => ["AnyAtRoot"] } },
@@ -33,7 +37,8 @@ module Fhirpath
         "count" => { fn: Existence.method(:count) },
         "=" => { fn: Equality.method(:equal), arity: { 2 => %w[Any Any] }, nullable: true },
         "<" => { fn: Equality.method(:lt), arity: { 2 => %w[Any Any] }, nullable: true },
-        ">" => { fn: Equality.method(:gt), arity: { 2 => %w[Any Any] }, nullable: true }
+        ">" => { fn: Equality.method(:gt), arity: { 2 => %w[Any Any] }, nullable: true },
+        "+" => { fn: Math.method(:plus), arity: { 2 => %w[Any Any] }, nullable: true }
       }.freeze
     end
   end
