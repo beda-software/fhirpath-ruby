@@ -12,6 +12,12 @@ module Fhirpath
       # numeric functions (`abs`/`ceiling`/`exp`/`floor`/`ln`/`log`/`power`/`round`/`sqrt`/
       # `truncate`) live in math_functions.rb, reopening this same module.
       module Math
+        # Matches Python's decimal module's default context precision (28 significant digits),
+        # which is what fhirpath-py's `/` division relies on implicitly — Ruby's BigDecimal `/`
+        # has no such fixed precision by default, so without this e.g. `1.2 / 1.8` produces a
+        # different (longer, differently-rounded) repeating decimal than the reference.
+        DECIMAL_PRECISION = 28
+
         class << self
           def plus(_ctx, left, right)
             lhs, rhs = resolve_operands(left, right, "+")
@@ -38,13 +44,13 @@ module Fhirpath
           def div(_ctx, lhs, rhs)
             return [] if rhs.zero?
 
-            Util.to_big_decimal(lhs) / Util.to_big_decimal(rhs)
+            Util.to_big_decimal(lhs).div(Util.to_big_decimal(rhs), DECIMAL_PRECISION)
           end
 
           def intdiv(_ctx, lhs, rhs)
             return [] if rhs.zero?
 
-            (Util.to_big_decimal(lhs) / Util.to_big_decimal(rhs)).truncate
+            Util.to_big_decimal(lhs).div(Util.to_big_decimal(rhs), DECIMAL_PRECISION).truncate
           end
 
           def mod(_ctx, lhs, rhs)
@@ -65,25 +71,11 @@ module Fhirpath
           # `plus`/`minus`: strip the "Cannot ... " length check down to the primitive operand,
           # then unwrap it from its ResourceNode.
           def resolve_operands(left, right, operator)
-            left = remove_duplicate_extension(left)
-            right = remove_duplicate_extension(right)
+            left = Util.remove_duplicate_extension(left)
+            right = Util.remove_duplicate_extension(right)
             raise Fhirpath::Error, "Cannot #{left} #{operator} #{right}" if left.length != 1 || right.length != 1
 
             [Util.get_data(left[0]), Util.get_data(right[0])]
-          end
-
-          # A FHIR primitive element with an "_x" extension companion (e.g. "birthDate" +
-          # "_birthDate") navigates to a 2-item collection: the primitive value, then a
-          # ResourceNode wrapping just its `{"extension": [...]}` sibling. Mirrors
-          # fhirpath-py's equality.remove_duplicate_extension (its own comment calls this "a
-          # temporary solution... needs to be fixed to a better solution") — `+`/`-` only care
-          # about the primitive value.
-          def remove_duplicate_extension(list)
-            second = list[1]
-            return list unless list.length == 2 && second.is_a?(Nodes::ResourceNode) &&
-                               second.data.is_a?(::Hash) && second.data.key?("extension")
-
-            list.first(1)
           end
 
           # A duration quantity added to (or, via `minus`, subtracted from) a date/time value —

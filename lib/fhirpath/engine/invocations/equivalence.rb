@@ -63,7 +63,7 @@ module Fhirpath
           def value_equivalent?(left, right)
             return normalize_string(left) == normalize_string(right) if both_strings?(left, right)
             return numbers_equivalent?(left, right) if left.is_a?(::BigDecimal) || right.is_a?(::BigDecimal)
-            return left.equivalent?(right) if both_quantities?(left, right)
+            return left.deep_equal(right) if both_quantities?(left, right)
             return deep_equivalent?(left, right) if collection_like?(left) && collection_like?(right)
 
             left == right

@@ -9,9 +9,8 @@ module Fhirpath
       # "value unit", exposing `.value` through member invocation, the calendar duration/
       # time-unit conversion-factor equality used by `=`/`distinct`/`repeat`/`intersect`
       # (https://hl7.org/fhirpath/#equals), the more lenient `equivalent?` used by `~`, and
-      # `conv_unit_to` (used by `toQuantity(unit)` for explicit unit conversion). The general/
-      # else branch of conv_unit_to (arbitrary matching-unit passthrough) and the g/mg category
-      # aren't ported, since they aren't exercised yet.
+      # `conv_unit_to` (used by `toQuantity(unit)` for explicit unit conversion, and by
+      # `general_equivalent?`/`deep_equal` below for cross-unit comparisons).
       class FPQuantity
         # Bare calendar-duration words and already-quoted UCUM codes all normalize to the
         # quoted UCUM code, mirroring fhirpath-py's FP_Quantity.timeUnitsToUCUM.
@@ -87,7 +86,7 @@ module Fhirpath
 
         def equivalent?(other)
           return false unless other.is_a?(FPQuantity)
-          return exact_match?(other) unless same_convertible_category?(other)
+          return general_equivalent?(other) unless same_convertible_category?(other)
 
           scaled(self) == scaled(other)
         end
@@ -96,7 +95,8 @@ module Fhirpath
           convert_by_table(CONV_YEAR_MONTH_FACTORS, from_unit, value, to_unit) ||
             convert_by_table(TIME_FACTORS, from_unit, value, to_unit) ||
             convert_by_table(LENGTH_FACTORS, from_unit, value, to_unit) ||
-            convert_weight(from_unit, value, to_unit)
+            convert_weight(from_unit, value, to_unit) ||
+            convert_mass(from_unit, value, to_unit)
         end
 
         def self.convert_by_table(factors, from_unit, value, to_unit)

@@ -6,7 +6,7 @@ module Fhirpath
       # `<`/`>`/`<=`/`>=` from fhirpath-py's fhirpathpy/engine/invocations/equality.py
       # (typecheck/lt/gt/lte/gte). Split out of equality.rb to keep that file's module body
       # short; reopens the same Equality module (datetime_value?/coerce_datetime are defined
-      # there). `remove_duplicate_extension`'s primitive-extension edge case isn't ported.
+      # there).
       module Equality
         class << self
           def lt(_ctx, left, right)
@@ -49,6 +49,8 @@ module Fhirpath
           # cross-comparable regardless of exact class); a string compared against a
           # DateTime/Time is itself parsed as one first.
           def typecheck(left, right)
+            left = Util.remove_duplicate_extension(left)
+            right = Util.remove_duplicate_extension(right)
             check_length(left)
             check_length(right)
 

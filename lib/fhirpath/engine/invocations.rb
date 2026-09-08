@@ -8,6 +8,7 @@ require_relative "invocations/combining"
 require_relative "invocations/math"
 require_relative "invocations/subsetting"
 require_relative "invocations/misc"
+require_relative "invocations/misc_converts_to"
 require_relative "invocations/strings"
 require_relative "invocations/datetime"
 require_relative "invocations/types"
@@ -31,6 +32,7 @@ module Fhirpath
         "repeat" => { fn: Filtering.method(:repeat), arity: { 1 => ["Expr"] } },
         "ofType" => { fn: Filtering.method(:of_type), arity: { 1 => ["TypeSpecifier"] } },
         "extension" => { fn: Filtering.method(:extension), arity: { 1 => ["String"] } },
+        "type" => { fn: Types.method(:type) },
         "is" => { fn: Types.method(:is), arity: { 1 => ["TypeSpecifier"] } },
         "as" => { fn: Types.method(:as), arity: { 1 => ["TypeSpecifier"] } },
         "isOp" => { fn: Types.method(:is), arity: { 2 => %w[Any TypeSpecifier] } },
@@ -83,7 +85,7 @@ module Fhirpath
         "mod" => { fn: Math.method(:mod), arity: { 2 => %w[Number Number] }, nullable: true },
         "&" => { fn: Math.method(:amp), arity: { 2 => %w[String String] } },
         "iif" => { fn: Misc.method(:iif), arity: { 2 => %w[Expr Expr], 3 => %w[Expr Expr Expr] } },
-        "trace" => { fn: Misc.method(:trace), arity: { 0 => [], 1 => ["String"] } },
+        "trace" => { fn: Misc.method(:trace), arity: { 0 => [], 1 => ["String"], 2 => %w[String Expr] } },
         "toInteger" => { fn: Misc.method(:to_integer) },
         "toDecimal" => { fn: Misc.method(:to_decimal) },
         "toString" => { fn: Misc.method(:to_string) },
@@ -91,6 +93,15 @@ module Fhirpath
         "toDateTime" => { fn: Misc.method(:to_date_time) },
         "toTime" => { fn: Misc.method(:to_time) },
         "toQuantity" => { fn: Misc.method(:to_quantity), arity: { 0 => [], 1 => ["String"] } },
+        "toBoolean" => { fn: Misc.method(:to_boolean) },
+        "convertsToBoolean" => { fn: Misc.method(:converts_to_boolean) },
+        "convertsToInteger" => { fn: Misc.method(:converts_to_integer) },
+        "convertsToDecimal" => { fn: Misc.method(:converts_to_decimal) },
+        "convertsToString" => { fn: Misc.method(:converts_to_string) },
+        "convertsToDate" => { fn: Misc.method(:converts_to_date) },
+        "convertsToDateTime" => { fn: Misc.method(:converts_to_date_time) },
+        "convertsToTime" => { fn: Misc.method(:converts_to_time) },
+        "convertsToQuantity" => { fn: Misc.method(:converts_to_quantity) },
         "aggregate" => { fn: Aggregate.method(:aggregate), arity: { 1 => ["Expr"], 2 => %w[Expr Any] } },
         "sum" => { fn: Aggregate.method(:sum) },
         "avg" => { fn: Aggregate.method(:avg) },

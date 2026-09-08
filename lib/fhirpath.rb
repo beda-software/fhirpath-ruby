@@ -49,7 +49,8 @@ module Fhirpath
     data_root = Engine::Util.arraify(resource)
     ctx = {
       root: data_root,
-      vars: { "context" => resource, "resource" => resource, "ucum" => "http://unitsofmeasure.org" }.merge(context || {}),
+      vars: { "context" => resource, "resource" => resource,
+              "ucum" => "http://unitsofmeasure.org" }.merge(context || {}),
       model: model.is_a?(::String) ? Models[model] : model,
       user_invocation_table: {}
     }

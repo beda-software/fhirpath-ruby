@@ -5,9 +5,9 @@ require "bigdecimal"
 module Fhirpath
   module Engine
     module Invocations
-      # Ruby port of `iif`/`toInteger`/`toDecimal`/`toString`/`toDate`/`toDateTime`/`toTime`/
-      # `toQuantity` from fhirpath-py's fhirpathpy/engine/invocations/misc.py. `toBoolean` and
-      # the convertsTo* family aren't exercised yet.
+      # Ruby port of `iif`/`trace`/`toInteger`/`toDecimal`/`toString`/`toDate`/`toDateTime`/
+      # `toTime`/`toQuantity` from fhirpath-py's fhirpathpy/engine/invocations/misc.py.
+      # `toBoolean`/the convertsTo* family live in misc_converts_to.rb, reopening this module.
       module Misc
         INT_REGEX = /\A[+-]?\d+\z/
         NUM_REGEX = /\A[+-]?\d+(\.\d+)?\z/
@@ -22,8 +22,12 @@ module Fhirpath
           end
 
           # Logs the input collection under `label` (via ctx[:trace_fn] if the caller supplied
-          # one, else stdout) and returns it unchanged.
-          def trace(ctx, coll, label = "")
+          # one, else stdout) and returns it unchanged. Mirrors fhirpath-py: a second
+          # ("projection") argument is accepted but not used for anything — fhirpath-py itself
+          # silently drops it (engine/__init__.py truncates trace's raw_params to the first
+          # element before arity resolution) rather than actually implementing the spec's
+          # "trace with a projected value" behavior.
+          def trace(ctx, coll, label = "", _projection = nil)
             if ctx[:trace_fn].respond_to?(:call)
               ctx[:trace_fn].call(label, coll)
             else
@@ -62,6 +66,8 @@ module Fhirpath
             return [] if coll.empty?
 
             Nodes::FPDateTime.new(Util.get_data(coll.first))
+          rescue Fhirpath::Error
+            []
           end
 
           # fhirpath-py's to_date is, as written, identical to to_date_time (no truncation to
@@ -75,6 +81,8 @@ module Fhirpath
             return [] if coll.empty?
 
             Nodes::FPTime.new(Util.get_data(coll.first))
+          rescue Fhirpath::Error
+            []
           end
 
           def to_quantity(_ctx, coll, to_unit = nil)

@@ -50,8 +50,17 @@ module Fhirpath
 
         def self.create_by_value_in_namespace(namespace, value)
           name = type_name_for(value)
-          name = namespace == SYSTEM ? name.capitalize : name
+          name = namespace == SYSTEM ? system_name(name) : name
           new(name, namespace)
+        end
+
+        # Mirrors fhirpath-py's TypeInfo.create_by_value_in_namespace: every System-namespace
+        # name is capitalized, EXCEPT "dateTime" — Ruby's (and Python's) #capitalize also
+        # downcases the rest of the string, which would mangle "dateTime" into "Datetime".
+        def self.system_name(name)
+          return "DateTime" if name == "dateTime"
+
+          name.capitalize
         end
 
         TYPE_NAMES_BY_CLASS = {
@@ -59,6 +68,7 @@ module Fhirpath
           ::Float => "decimal",
           ::BigDecimal => "decimal",
           FPDateTime => "dateTime",
+          FPTime => "time",
           FPQuantity => "Quantity",
           ::String => "string",
           ::Hash => "object"

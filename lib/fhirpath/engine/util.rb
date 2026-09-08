@@ -68,6 +68,20 @@ module Fhirpath
         # Dedupes values that compare equal after normalizing hash key order (so
         # `{"a"=>1,"b"=>2}` and `{"b"=>2,"a"=>1}` collapse together), preserving first-seen
         # order — mirrors fhirpath-py's util.uniq (JSON-with-sorted-keys as the dedup key).
+        # A FHIR primitive element with an "_x" extension companion (e.g. "birthDate" +
+        # "_birthDate") navigates to a 2-item collection: the primitive value, then a
+        # ResourceNode wrapping just its `{"extension" => [...]}` sibling. Mirrors fhirpath-py's
+        # equality.remove_duplicate_extension (its own comment calls this "a temporary
+        # solution... needs to be fixed to a better solution") — used wherever only the
+        # primitive value matters (`+`/`-`, singleton type/length checks for `<`/`>`/`<=`/`>=`).
+        def remove_duplicate_extension(list)
+          second = list[1]
+          return list unless list.length == 2 && second.is_a?(Nodes::ResourceNode) &&
+                             second.data.is_a?(::Hash) && second.data.key?("extension")
+
+          list.first(1)
+        end
+
         def uniq(values)
           seen = {}
           values.each_with_object([]) do |value, acc|
