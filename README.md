@@ -9,17 +9,39 @@ Ruby ecosystem.
 
 ## Installation
 
-Not yet released to RubyGems. Once published:
-
 ```bash
 bundle add fhirpath-rb
 ```
 
-## Planned usage
+## Usage
+
+`compile_as_first` and `compile_as_array` parse a FHIRPath expression once and return a
+reusable callable that accepts a [fhir_models](https://github.com/fhir-crucible/fhir_models)
+resource instance and wraps results as instances of a given `output_type` (raw values pass
+through as-is when `output_type` isn't a fhir_models class):
 
 ```ruby
 require "fhirpath"
 
+patient = FHIR::Patient.new(
+  "name" => [
+    { "use" => "official", "given" => ["Peter", "James"], "family" => "Chalmers" },
+    { "use" => "usual", "given" => ["Jim"] }
+  ]
+)
+
+first_name = Fhirpath.compile_as_first("Patient.name.where(use = 'usual')", FHIR::Patient, FHIR::HumanName)
+first_name.call(patient)
+# => #<FHIR::HumanName ...>
+
+all_given = Fhirpath.compile_as_array("Patient.name.given", FHIR::Patient, String)
+all_given.call(patient)
+# => ["Peter", "James", "Jim"]
+```
+
+`Fhirpath.evaluate` works directly against a plain resource Hash and returns raw values:
+
+```ruby
 patient = {
   "resourceType" => "Patient",
   "name" => [
