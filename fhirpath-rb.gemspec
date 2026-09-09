@@ -28,6 +28,19 @@ Gem::Specification.new do |spec|
         f.start_with?(*%w[bin/ test/ spec/ features/ .git .github appveyor Gemfile])
     end
   end
+  # The native extension's sources are generated from lib/fhirpath/parser/FHIRPath.g4 by
+  # `rake parser:setup` (see rakelib/parser.rake) and are gitignored, so `git ls-files` above
+  # never sees them. They still have to ship inside the released gem — otherwise `extconf.rb`
+  # has nothing to compile on the installing machine — so they're added explicitly here. Run
+  # `rake parser:setup` before `gem build`/`rake release` for this to have anything to glob.
+  antlr4_runtime_src = "ext/fhir_path_parser/antlr4-upstream/runtime/Cpp/runtime/src"
+  generated_globs = [
+    "ext/fhir_path_parser/fhir_path_parser.cpp",
+    "ext/fhir_path_parser/antlrgen/*.{cpp,h}",
+    "#{antlr4_runtime_src}/*.{cpp,h}",
+    "#{antlr4_runtime_src}/{atn,dfa,misc,support,tree,tree/pattern,tree/xpath}/*.{cpp,h}"
+  ]
+  spec.files += generated_globs.flat_map { |glob| Dir.glob(glob, base: __dir__) }
   spec.bindir = "exe"
   spec.executables = spec.files.grep(%r{\Aexe/}) { |f| File.basename(f) }
   # "ext/fhir_path_parser" is only needed so `require "fhir_path_parser"` resolves during local
