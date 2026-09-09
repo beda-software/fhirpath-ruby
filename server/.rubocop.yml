@@ -1,0 +1,22 @@
+AllCops:
+  TargetRubyVersion: 3.2
+  NewCops: enable
+
+Style/StringLiterals:
+  EnforcedStyle: double_quotes
+
+Style/StringLiteralsInInterpolation:
+  EnforcedStyle: double_quotes
+
+Metrics/BlockLength:
+  Exclude:
+    - "spec/**/*_spec.rb"
+
+# A single value-type dispatch is clearer as one case statement than split further.
+Metrics/CyclomaticComplexity:
+  Exclude:
+    - "lib/fhirpath_server/result_formatter.rb"
+
+Metrics/MethodLength:
+  Exclude:
+    - "lib/fhirpath_server/result_formatter.rb"

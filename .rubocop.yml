@@ -1,5 +1,9 @@
 AllCops:
   TargetRubyVersion: 3.0
+  # Standalone app with its own Gemfile/CI/.rubocop.yml (server/.rubocop.yml) - not part of this
+  # gem's bundle or lint run.
+  Exclude:
+    - "server/**/*"
 
 Style/StringLiterals:
   EnforcedStyle: double_quotes

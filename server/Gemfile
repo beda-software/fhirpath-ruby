@@ -1,0 +1,25 @@
+# frozen_string_literal: true
+
+source "https://rubygems.org"
+
+# Pinned via FHIRPATH_RB_VERSION at Docker build time (see Dockerfile) so the release workflow
+# can build an image against the exact fhirpath-rb version that was just published; falls back
+# to "latest 0.x" for local development.
+fhirpath_rb_version = ENV.fetch("FHIRPATH_RB_VERSION", nil)
+if fhirpath_rb_version && !fhirpath_rb_version.empty?
+  gem "fhirpath-rb", fhirpath_rb_version
+else
+  gem "fhirpath-rb", "~> 0.1"
+end
+
+gem "grape", "~> 2.2"
+gem "puma", "~> 6.4"
+gem "rack", "~> 3.1"
+gem "rack-cors", "~> 2.0"
+
+group :development, :test do
+  gem "rack-test", "~> 2.1"
+  gem "rake", "~> 13.0"
+  gem "rspec", "~> 3.0"
+  gem "rubocop", "~> 1.21"
+end
