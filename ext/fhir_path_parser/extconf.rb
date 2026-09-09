@@ -7,7 +7,11 @@ have_library("stdc++")
 
 $CFLAGS << " -std=c++14"
 
-$defs.push("-DANTLR4CPP_STATIC") if enable_config("static") && !$defs.include?("-DANTLR4CPP_STATIC")
+# The antlr4 runtime sources below are compiled directly into this extension, never built as
+# a separate DLL, so ANTLR4CPP_PUBLIC must never expand to __declspec(dllimport) (its default
+# on Windows) — that would reject definitions like static data members as belonging to an
+# imported class. Define it unconditionally rather than gating on --enable-static.
+$defs.push("-DANTLR4CPP_STATIC") unless $defs.include?("-DANTLR4CPP_STATIC")
 
 include_paths = [
   ".",
