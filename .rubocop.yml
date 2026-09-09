@@ -2,6 +2,15 @@ AllCops:
   TargetRubyVersion: 3.0
   # Standalone app with its own Gemfile/CI/.rubocop.yml (server/.rubocop.yml) - not part of this
   # gem's bundle or lint run.
+  #
+  # inherit_mode merge is required here: setting AllCops/Exclude at all, without it, REPLACES
+  # (rather than adds to) RuboCop's own built-in default Exclude list (vendor/**/*, tmp/**/*,
+  # node_modules/**/*, .git/**/*) - see https://docs.rubocop.org/rubocop/configuration.html#inheritance.
+  # That's what silently exposed vendor/bundle/ (bundler-cache's install dir in CI) to linting
+  # once this Exclude entry was added for server/.
+  inherit_mode:
+    merge:
+      - Exclude
   Exclude:
     - "server/**/*"
 

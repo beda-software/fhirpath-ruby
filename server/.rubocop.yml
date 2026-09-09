@@ -1,6 +1,16 @@
 AllCops:
   TargetRubyVersion: 3.2
   NewCops: enable
+  # inherit_mode merge is required as soon as this Exclude key exists at all: without it, this
+  # list REPLACES (rather than adds to) RuboCop's own built-in default Exclude
+  # (vendor/**/*, tmp/**/*, node_modules/**/*, .git/**/*) instead of adding to it - see
+  # https://docs.rubocop.org/rubocop/configuration.html#inheritance. vendor/**/* is bundler-cache's
+  # gem install dir in CI and must stay excluded even after this key is set.
+  inherit_mode:
+    merge:
+      - Exclude
+  Exclude:
+    - "vendor/**/*"
 
 Style/StringLiterals:
   EnforcedStyle: double_quotes

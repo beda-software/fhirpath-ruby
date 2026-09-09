@@ -31,4 +31,9 @@ jobs:
       - name: Run RSpec
         run: bundle exec rspec
       - name: Run RuboCop
-        run: bundle exec rubocop
+        # --ignore-parent-exclusion: server/ has its own Gemfile and .rubocop.yml and is linted
+        # as an independent project. Without this flag, RuboCop walks up to the root
+        # .rubocop.yml (found via its Gemfile) and inherits its `Exclude: server/**/*`, which
+        # excludes every file under server/ from this very lint run - silently making it a
+        # vacuous pass (0 files inspected) instead of actually linting anything.
+        run: bundle exec rubocop --ignore-parent-exclusion
