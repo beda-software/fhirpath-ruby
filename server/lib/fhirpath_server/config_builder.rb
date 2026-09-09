@@ -30,8 +30,19 @@ module FhirpathServer
           "fhirVersion" => engine[:fhir_version],
           "configSetting" => config_setting
         )
-        config[config_setting] = "#{base_url}/fhir/#{engine[:operation]}"
+        config[config_setting] = "#{force_https(base_url)}/fhir/#{engine[:operation]}"
       end
     end
+
+    # Puma always serves plain HTTP (see Dockerfile); in production this app is only ever
+    # reachable through a TLS-terminating reverse proxy in front of it, so `base_url`'s scheme
+    # (derived from the possibly-missing/misconfigured X-Forwarded-Proto header) can't be
+    # trusted - force https rather than advertise engine URLs fhirpath-lab can't actually use.
+    def self.force_https(base_url)
+      return base_url unless ENV["RACK_ENV"] == "production"
+
+      base_url.sub(/\Ahttp:/, "https:")
+    end
+    private_class_method :force_https
   end
 end
