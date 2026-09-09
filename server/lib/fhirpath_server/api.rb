@@ -73,5 +73,13 @@ module FhirpathServer
         evaluate_fhirpath("r5")
       end
     end
+
+    desc "Serve a fhirpath-lab custom configuration " \
+         "(https://github.com/brianpos/fhirpath-lab/blob/develop/docs/custom-configuration.md) " \
+         "registering this server as a selectable engine"
+    get "config.json" do
+      status 200
+      ConfigBuilder.call(base_url: request.base_url)
+    end
   end
 end

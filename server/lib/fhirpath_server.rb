@@ -5,6 +5,7 @@ require "fhirpath"
 require_relative "fhirpath_server/result_formatter"
 require_relative "fhirpath_server/request_parser"
 require_relative "fhirpath_server/response_builder"
+require_relative "fhirpath_server/config_builder"
 require_relative "fhirpath_server/api"
 
 # Standalone Grape web server exposing fhirpath-rb over the fhirpath-lab server API

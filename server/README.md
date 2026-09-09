@@ -16,10 +16,20 @@ installed from rubygems.org (see `Gemfile`). It's distributed as its own Docker 
 
 - `POST /fhir/$fhirpath` — evaluate against R4
 - `POST /fhir/$fhirpath-r5` — evaluate against R5
+- `GET /config.json` — [fhirpath-lab custom configuration](https://github.com/brianpos/fhirpath-lab/blob/develop/docs/custom-configuration.md)
 
-Both take a `Parameters` resource body with `expression`, `resource`, and optionally `context`,
-`variables`, and `terminologyserver` parameters, and return a `Parameters` resource with the
-evaluation result(s). See the fhirpath-lab server API doc linked above for the full shape.
+The first two take a `Parameters` resource body with `expression`, `resource`, and optionally
+`context`, `variables`, and `terminologyserver` parameters, and return a `Parameters` resource
+with the evaluation result(s). See the fhirpath-lab server API doc linked above for the full
+shape.
+
+`GET /config.json` registers this server's R4 and R5 endpoints as selectable fhirpath-lab
+engines (`fhirpath-rb (R4)` / `fhirpath-rb (R5)`) without needing them merged into
+fhirpath-lab's own built-in registry — point the tester at it directly:
+
+```
+https://fhirpath-lab.com/FhirPath?config=https://<this-server>/config.json
+```
 
 ## Known limitation vs. fhirpath-py-server
 

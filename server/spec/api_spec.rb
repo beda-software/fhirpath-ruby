@@ -127,4 +127,23 @@ RSpec.describe FhirpathServer::API do
     evaluator = header["part"].find { |p| p["name"] == "evaluator" }
     expect(evaluator["valueString"]).to end_with("-R5")
   end
+
+  describe "GET /config.json" do
+    it "advertises R4 and R5 engines pointing at this server's own evaluation endpoints" do
+      get "/config.json"
+      body = JSON.parse(last_response.body)
+
+      expect(last_response.status).to eq(200)
+
+      r4 = body["engines"]["fhirpath-rb (R4)"]
+      r5 = body["engines"]["fhirpath-rb (R5)"]
+      expect(r4["fhirVersion"]).to eq("R4")
+      expect(r5["fhirVersion"]).to eq("R5")
+      expect(r4["configSetting"]).to eq("fhirpath_rb_r4")
+      expect(r5["configSetting"]).to eq("fhirpath_rb_r5")
+
+      expect(body["fhirpath_rb_r4"]).to eq("http://example.org/fhir/$fhirpath")
+      expect(body["fhirpath_rb_r5"]).to eq("http://example.org/fhir/$fhirpath-r5")
+    end
+  end
 end
