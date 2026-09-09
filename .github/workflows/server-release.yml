@@ -32,6 +32,27 @@ jobs:
           version=$(ruby -r./lib/fhirpath/version -e 'puts Fhirpath::VERSION')
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
+      # release.yml's "Release to rubygems.org" step completing doesn't mean the version is
+      # resolvable yet - rubygems.org's compact index (what `gem install`/`bundle install` both
+      # read) lags the push by anywhere from a few seconds to a couple of minutes. Without this,
+      # the Docker build's `bundle install` intermittently fails with "could not find gem
+      # fhirpath-rb". `--explain` resolves without installing, exercising the same lookup path
+      # bundler uses in the Dockerfile.
+      - name: Wait for the gem to be resolvable on rubygems.org
+        run: |
+          version="${{ steps.version.outputs.version }}"
+          echo "Waiting for fhirpath-rb $version to be resolvable on rubygems.org..."
+          for i in $(seq 1 30); do
+            if gem install fhirpath-rb -v "$version" --explain > /dev/null 2>&1; then
+              echo "fhirpath-rb $version is resolvable."
+              exit 0
+            fi
+            echo "Not yet available (attempt $i/30); retrying in 20s..."
+            sleep 20
+          done
+          echo "::error::Timed out waiting for fhirpath-rb $version to appear on rubygems.org"
+          exit 1
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
