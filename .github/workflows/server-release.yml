@@ -51,5 +51,5 @@ jobs:
           build-args: |
             FHIRPATH_RB_VERSION=${{ steps.version.outputs.version }}
           tags: |
-            ghcr.io/${{ github.repository_owner }}/fhirpath-server:${{ steps.version.outputs.version }}
-            ghcr.io/${{ github.repository_owner }}/fhirpath-server:latest
+            ghcr.io/${{ github.repository_owner }}/fhirpath-rb-server:${{ steps.version.outputs.version }}
+            ghcr.io/${{ github.repository_owner }}/fhirpath-rb-server:latest
