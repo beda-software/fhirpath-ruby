@@ -1,0 +1,48 @@
+# Publishes the gem to rubygems.org whenever a GitHub release is published.
+#
+# Authenticates via RubyGems Trusted Publishing (OIDC) — no API key secret is stored in this
+# repo. One-time setup required on rubygems.org: add a Trusted Publisher for the `fhirpath-rb`
+# gem pointing at this repository and workflow filename (release.yml). See
+# https://guides.rubygems.org/trusted-publishing/.
+#
+# The release tag/version must already exist and match lib/fhirpath/version.rb (e.g. tag
+# "v1.2.3" for VERSION = "1.2.3") — `rubygems/release-gem` shells out to `bundle exec rake
+# release`, which builds and pushes the gem but skips (re)creating a tag that's already there.
+name: Release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # required for trusted publishing
+      contents: write # required by `rake release` to push the release tag, if not already pushed
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Java (needed to generate the ANTLR4 parser)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.4'
+          bundler-cache: true
+
+      - name: Generate the native FHIRPath parser sources
+        run: bundle exec rake parser:setup
+
+      - name: Release to rubygems.org
+        uses: rubygems/release-gem@v1
