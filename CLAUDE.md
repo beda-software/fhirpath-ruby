@@ -57,3 +57,55 @@ miss otherwise.
   (the default Rake task) and must stay clean.
 - No implementation code should be added speculatively — this file describes the target shape
   so future work has a map, not a request to build it all now.
+
+## Release process ("bump")
+
+The maintainer typing **"bump"** (or "bump X.Y.Z") to Claude is standing, in-the-moment
+authorization for the full state-changing sequence below — commit, push, tag, push tag, and
+GitHub release — for that one release only. No separate confirmation is needed per step; run
+the whole sequence end-to-end without pausing to ask "should I push now?" etc.
+
+**Version to release:**
+- Plain **"bump"** → increment the patch version (Z in X.Y.Z) of whatever's currently in
+  `lib/fhirpath/version.rb`.
+- **"bump X.Y.Z"** (an explicit version, e.g. for a minor/major bump like `0.2.0`) → set the
+  version to exactly that string instead of incrementing.
+
+**Steps, in order:**
+1. `git status` — working tree must be clean and up to date with `origin/main` before starting.
+   If it isn't (uncommitted changes, unrelated local commits), stop and ask rather than
+   assuming they should be swept into the release.
+2. Edit `lib/fhirpath/version.rb` to the new version.
+3. Run `bundle exec rake` (specs + RuboCop) and confirm it's green. If parser sources aren't
+   already built, run `bundle exec rake parser:setup compile` first (see rakelib/parser.rake).
+4. **Mandatory packaging sanity check** — this is the step that was skipped before 0.1.1/0.1.2
+   shipped a broken native extension (the gemspec's generated-files glob had silently gone
+   missing and nothing caught it until a user hit a `LoadError` in production):
+   - `gem build fhirpath-rb.gemspec`
+   - Install the built `.gem` into a throwaway isolated `GEM_HOME` (e.g. under a scratch dir),
+     with `env -u BUNDLE_GEMFILE -u RUBYOPT` to avoid this repo's own bundler env leaking in,
+     and with `GEM_PATH` pointing at a location that already has `rice`/`fhir_models` installed
+     (or allow network) so dependencies resolve.
+   - From that isolated `GEM_HOME`, `require "fhirpath"` and call `Fhirpath.evaluate` on a
+     trivial resource. Confirm the native extension (`fhir_path_parser.bundle`/`.so`) actually
+     got compiled into that GEM_HOME's `extensions/` dir and the require succeeds.
+   - Clean up the scratch gem/dirs afterward. If this check fails, stop — do not tag or release
+     a broken build; fix the gemspec/extension setup first.
+5. `git add lib/fhirpath/version.rb` (plus any other files that were part of this bump, e.g. a
+   packaging fix) and commit as `Bump X.Y.Z`, with whatever commit attribution footer is
+   currently in effect for the session.
+6. `git push origin main`.
+7. `git tag -a vX.Y.Z -m "Version X.Y.Z"` and `git push origin vX.Y.Z`.
+8. `gh release create vX.Y.Z --title "vX.Y.Z" --generate-notes` — this triggers
+   `.github/workflows/release.yml`, which publishes to rubygems.org via Trusted Publishing.
+9. `gh run watch <run-id> --exit-status` (find the run with `gh run list --workflow=release.yml
+   --limit 1`) and confirm it completes successfully.
+10. Final live-artifact check: in a scratch dir, `gem install fhirpath-rb -v X.Y.Z` from
+    rubygems.org (not the local build) and `require "fhirpath"` to confirm what's actually
+    published works, not just what was built locally.
+11. Report back: new version, release URL, and confirmation that the published gem loads.
+
+If step 4 or 10 fails, the release is broken in the same way 0.1.1/0.1.2 were — do not consider
+the release done, and do not stop at "gem pushed successfully" as the definition of success.
+`gem push` succeeding only means RubyGems accepted the upload; it says nothing about whether
+the native extension actually compiles for an installer.
