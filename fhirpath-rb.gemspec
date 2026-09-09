@@ -30,7 +30,11 @@ Gem::Specification.new do |spec|
   end
   spec.bindir = "exe"
   spec.executables = spec.files.grep(%r{\Aexe/}) { |f| File.basename(f) }
-  spec.require_paths = ["lib"]
+  # "ext/fhir_path_parser" is only needed so `require "fhir_path_parser"` resolves during local
+  # development, where `rake parser:setup compile` builds the .bundle in place; for an installed
+  # gem, RubyGems adds its own extension build directory (which holds the real compiled
+  # artifact) to the load path automatically.
+  spec.require_paths = ["lib", "ext/fhir_path_parser"]
   spec.extensions = ["ext/fhir_path_parser/extconf.rb"]
 
   spec.add_dependency "base64"

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "../../ext/fhir_path_parser/fhir_path_parser"
+require "fhir_path_parser"
 require_relative "parser/ast_builder"
 
 module Fhirpath
